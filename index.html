@@ -300,13 +300,13 @@ const LS = "eval_refri_intento";
 const $ = id => document.getElementById(id);
 const LETRAS = ["A","B","C","D"];
 const ERRORES = {
-  EXAMEN_CERRADO: "El examen no está disponible en este momento. Consulta con la evaluadora.",
+  EXAMEN_CERRADO: "El examen no está disponible en este momento. Consulta con el evaluador.",
   NOMBRE_INVALIDO: "Escribe tu nombre y apellidos completos.",
   DNI_INVALIDO: "El DNI debe tener 8 dígitos.",
-  YA_RINDIO: "Este DNI ya rindió esta evaluación. Si es un error, avisa a la evaluadora.",
-  EN_CURSO: "Este DNI tiene un examen en curso en otro celular. Avisa a la evaluadora.",
+  YA_RINDIO: "Este DNI ya rindió esta evaluación. Si es un error, avisa a el evaluador.",
+  EN_CURSO: "Este DNI tiene un examen en curso en otro celular. Avisa a el evaluador.",
   ZONA_INVALIDA: "Escribe tu zona.",
-  SIN_PREGUNTAS: "El examen todavía no tiene preguntas cargadas. Avisa a la evaluadora.",
+  SIN_PREGUNTAS: "El examen todavía no tiene preguntas cargadas. Avisa a el evaluador.",
   RED: "No hay conexión a internet. Revisa tu señal e intenta de nuevo."
 };
 
@@ -534,8 +534,8 @@ function pantallaEnviado(info){
   $("s-eyebrow").textContent = anulado ? "Examen cerrado" : "Examen enviado";
   $("s-okc").hidden = anulado; $("s-badc").hidden = !anulado;
   $("s-msg").innerHTML = anulado
-    ? "Tu examen se cerró automáticamente porque <b>saliste de la página</b> (cambiaste de pestaña o de aplicación, recargaste o se bloqueó la pantalla). Quedó registrado como <b>anulado</b> y la evaluadora revisará el caso."
-    : "Tu examen quedó guardado en el sistema. <b>La evaluadora revisará los resultados</b> y te los comunicará.";
+    ? "Tu examen se cerró automáticamente porque <b>saliste de la página</b> (cambiaste de pestaña o de aplicación, recargaste o se bloqueó la pantalla). Quedó registrado como <b>anulado</b> y el evaluador revisará el caso."
+    : "Tu examen quedó guardado en el sistema. <b>El evaluador revisará los resultados</b> y te los comunicará.";
   $("s-nombre").textContent = info.nombre || ""; $("s-dni").textContent = info.dni || ""; $("s-zona").textContent = info.zona || "";
   $("s-fecha").textContent = info.fin ? fecha(info.fin) : ""; $("s-id").textContent = info.envio || "";
   show("v-sent");
