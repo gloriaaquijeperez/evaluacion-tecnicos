@@ -171,6 +171,53 @@ input[type=text],input[type=email],input[type=password],input[type=number],selec
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px rgba(59,170,238,.18);background:#fff}
 .tabs button[aria-selected="true"]{color:var(--low)}
 .box{border-radius:18px}
+/* ===== Celular y tablet ===== */
+@media (max-width:900px){
+  .top .in{padding-top:10px;padding-bottom:10px;gap:8px}
+  .brand{gap:8px}
+  .brand .logo{width:96px}
+  .brand b{font-size:14px;padding-left:8px}
+  .brand small,#top-user{display:none}
+  .main{padding-top:16px;gap:16px}
+  .tabs button{flex:1;padding:10px 4px;font-size:13px}
+  .headrow{align-items:stretch}
+  .headrow h1{font-size:28px!important}
+  .headrow .row{width:100%}
+  .headrow label.row{flex:1 1 100%;justify-content:space-between}
+  .headrow label.row select{flex:1;min-width:0!important;width:auto!important}
+  .headrow .btn{flex:1 1 140px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .stat{padding:12px}
+  .stat span{font-size:12px}
+  .stat b{font-size:26px}
+  .stat b small{font-size:13px}
+  /* Tablas como tarjetas */
+  .tablebox{background:none;border:0;box-shadow:none;overflow:visible}
+  .tablebox .scroll{overflow:visible}
+  table.rc{min-width:0!important}
+  table.rc thead{display:none}
+  table.rc,table.rc tbody,table.rc tr,table.rc td{display:block;width:auto}
+  table.rc tr{background:#fff;border:1px solid #E1E8F2;border-radius:16px;padding:12px 14px;margin-bottom:10px;box-shadow:0 8px 20px -16px rgba(16,40,95,.45)}
+  table.rc tr.wrong{background:#FFF8F7;border-color:#F2C5C1}
+  table.rc td{border:0;padding:5px 0!important;display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:right;max-width:none!important}
+  table.rc td[data-label]::before{content:attr(data-label);font-family:var(--f-body);font-size:12px;font-weight:600;color:var(--muted);text-align:left;flex:none}
+  table.rc td.rc-tit::before{content:none!important}
+  table.rc td.rc-tit{display:block;text-align:left;font-size:15px;padding-bottom:8px!important;margin-bottom:4px;border-bottom:1px solid var(--line2)}
+  table.rc td.rc-acc{justify-content:flex-end;padding-top:8px!important}
+  table.rc td.rc-acc .lnk{font-size:14px}
+  table.rc-det td.rc-num{display:inline-block;font-size:12px;font-weight:700;color:var(--low);padding:0!important}
+  table.rc-det td.rc-num::before{content:"Pregunta "}
+  table.rc td.empty{display:block;text-align:center;background:#fff;border-radius:16px}
+  .bigscore b{font-size:44px}
+  #res-det > section.card{padding:16px!important;gap:16px!important}
+  #res-det h1{font-size:26px!important}
+  .bk-head{padding:12px 14px}
+  .bk-q{padding:12px 14px}
+}
+/* Tablet: tarjetas de resultados en 2 columnas */
+@media (min-width:600px) and (max-width:900px){table.rc:not(.rc-det) tbody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}table.rc:not(.rc-det) tr{margin:0}}
+/* Celular: los temas del banco en una fila deslizable */
+@media (max-width:600px){.bk-temas{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;margin:0 -16px;padding-left:16px;padding-right:16px}.bk-tema{flex:0 0 190px;scroll-snap-align:start}}
 </style>
 </head>
 <body>
@@ -236,7 +283,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);b
           <div class="stat"><span>Anulados (salieron de la página)</span><b id="st-exit" style="color:var(--high-ink)">0</b></div>
         </div>
         <div class="two">
-          <div class="wide tablebox"><div class="scroll"><table style="min-width:860px">
+          <div class="wide tablebox"><div class="scroll"><table class="rc" style="min-width:860px">
             <thead><tr><th>Técnico</th><th>DNI</th><th>Zona</th><th>Nota</th><th>Resultado</th><th>Salidas</th><th>Tiempo</th><th>Inicio / envío</th><th><span style="font-size:0">Acciones</span></th></tr></thead>
             <tbody id="tb"><tr><td colspan="9" class="empty">Cargando…</td></tr></tbody>
           </table></div></div>
@@ -273,7 +320,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);b
         </div>
         <section class="tablebox">
           <div style="padding:16px;border-bottom:1px solid var(--line)"><h2 style="font-size:20px">Respuestas</h2></div>
-          <div class="scroll"><table style="min-width:860px">
+          <div class="scroll"><table class="rc rc-det" style="min-width:860px">
             <thead><tr><th>N.º</th><th>Pregunta</th><th>Respuesta del técnico</th><th>Respuesta correcta</th><th>Resultado</th></tr></thead>
             <tbody id="d-tb"></tbody>
           </table></div>
@@ -565,13 +612,14 @@ function pintarResultados(){
   $("st-exit").innerHTML = T.filter(anulado).length + ' <small>técnicos</small>';
   $("tb").innerHTML = V.length ? V.map(r => {
     const s = r.salidas;
-    return '<tr><td><b style="font-weight:500">' + esc(r.nombre) + '</b>' + (evalSel === "*" ? '<br><span class="muted" style="font-size:12px">' + esc(r.evaluacion) + '</span>' : '') + '</td>' +
-      '<td class="n muted">' + esc(r.dni) + '</td><td>' + esc(r.zona) + '</td>' +
-      '<td class="n"><b style="font-weight:500' + (anulado(r) ? ';text-decoration:line-through;color:var(--muted)' : '') + '">' + (r.fin ? r.nota + '/' + r.total : '—') + '</b></td><td>' + chipRes(r) + '</td>' +
-      '<td>' + (s ? '<span class="chip bad">' + s + (s === 1 ? ' salida' : ' salidas') + '</span>' : '<span class="muted" style="font-size:13px">Ninguna</span>') + '</td>' +
-      '<td class="n">' + mmss(usado(r)) + '</td>' +
-      '<td class="muted" style="font-size:13px">' + hora(r.inicio) + (r.fin ? ' → ' + hora(r.fin) : '') + '<br><span style="font-size:12px">' + (r.fin ? esc(MOTIVOS[r.cierre] || r.cierre) : 'Respondiendo…') + '</span></td>' +
-      '<td style="text-align:right"><button type="button" class="lnk" data-det="' + r.id + '">Ver detalle</button></td></tr>';
+    // data-label: en celular la tabla se muestra como tarjetas con la etiqueta de cada dato
+    return '<tr><td class="rc-tit" data-label="Técnico"><b style="font-weight:500">' + esc(r.nombre) + '</b>' + (evalSel === "*" ? '<br><span class="muted" style="font-size:12px">' + esc(r.evaluacion) + '</span>' : '') + '</td>' +
+      '<td class="n muted" data-label="DNI">' + esc(r.dni) + '</td><td data-label="Zona">' + esc(r.zona) + '</td>' +
+      '<td class="n" data-label="Nota"><b style="font-weight:500' + (anulado(r) ? ';text-decoration:line-through;color:var(--muted)' : '') + '">' + (r.fin ? r.nota + '/' + r.total : '—') + '</b></td><td data-label="Resultado">' + chipRes(r) + '</td>' +
+      '<td data-label="Salidas">' + (s ? '<span class="chip bad">' + s + (s === 1 ? ' salida' : ' salidas') + '</span>' : '<span class="muted" style="font-size:13px">Ninguna</span>') + '</td>' +
+      '<td class="n" data-label="Tiempo">' + mmss(usado(r)) + '</td>' +
+      '<td class="muted" style="font-size:13px" data-label="Inicio / envío">' + hora(r.inicio) + (r.fin ? ' → ' + hora(r.fin) : '') + '<br><span style="font-size:12px">' + (r.fin ? esc(MOTIVOS[r.cierre] || r.cierre) : 'Respondiendo…') + '</span></td>' +
+      '<td class="rc-acc" style="text-align:right"><button type="button" class="lnk" data-det="' + r.id + '">Ver detalle</button></td></tr>';
   }).join("") : '<tr><td colspan="9" class="empty">' + (INT.length ? 'No hay técnicos de esta zona.' : 'Todavía nadie rindió esta evaluación. Comparte el link del examen (pestaña Configuración).') + '</td></tr>';
   document.querySelectorAll("[data-det]").forEach(b => b.onclick = () => verDetalle(b.dataset.det));
   const { t, q } = estadisticas(OK);
@@ -606,8 +654,8 @@ function verDetalle(id){
   $("d-tb").innerHTML = r.intento_preguntas.map(x => {
     const dio = x.respuesta === null ? null : x.opciones[x.respuesta];
     const res = !r.fin ? '<span class="chip gray">En curso</span>' : x.es_correcta ? '<span class="chip ok">Correcta</span>' : '<span class="chip bad">' + (dio === null ? "Sin responder" : "Incorrecta") + '</span>';
-    return '<tr class="' + (r.fin && !x.es_correcta ? "wrong" : "") + '"><td class="n muted">' + x.orden + '</td><td style="max-width:360px"><span class="eyebrow" style="display:block;margin-bottom:2px;font-size:10px">' + esc(x.tema) + '</span>' + esc(x.texto) + '</td>' +
-      '<td>' + (dio === null ? '<span class="muted">Sin responder</span>' : esc(dio)) + '</td><td class="muted">' + esc(x.correcta) + '</td><td>' + res + '</td></tr>';
+    return '<tr class="' + (r.fin && !x.es_correcta ? "wrong" : "") + '"><td class="n muted rc-num">' + x.orden + '</td><td class="rc-tit" style="max-width:360px"><span class="eyebrow" style="display:block;margin-bottom:2px;font-size:10px">' + esc(x.tema) + '</span>' + esc(x.texto) + '</td>' +
+      '<td data-label="Respondió">' + (dio === null ? '<span class="muted">Sin responder</span>' : esc(dio)) + '</td><td class="muted" data-label="Correcta">' + esc(x.correcta) + '</td><td data-label="Resultado">' + res + '</td></tr>';
   }).join("");
 }
 $("btn-del").onclick = async () => {

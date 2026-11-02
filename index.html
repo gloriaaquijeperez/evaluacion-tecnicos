@@ -169,6 +169,8 @@ body::before{background:var(--navy)}
 .opt[aria-checked="true"] .l{background:var(--grad-btn);border-color:transparent}
 .qgrid button{border-radius:8px}
 .qgrid button.done{background:#DCEEFD;color:var(--low)}
+/* Tablet y PC: columna un poco más ancha y los 4 datos del examen en una fila */
+@media (min-width:700px){.wrap,.top .in,.nav .in{max-width:660px}.rules{grid-template-columns:repeat(4,minmax(0,1fr))}.hero{padding:24px 26px 26px}.hero h1{font-size:30px}}
 </style>
 </head>
 <body>
