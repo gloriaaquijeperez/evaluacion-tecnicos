@@ -4,17 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>Panel · Evaluación de Refrigeración</title>
+<title>Panel · Evaluación de Conocimientos · Frioteam</title>
+<link rel="icon" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=IBM+Plex+Mono:wght@500&family=Inter:wght@400;500;600;700&display=swap">
 <style>
 :root{
-  --bg:#EEF2F5; --surface:#FFFFFF; --ink:#13212C; --muted:#52626F; --line:#D3DCE3; --line2:#E4EAEF;
-  --low:#1E5DA6; --low-soft:#E3EDF8; --high:#C3362B; --high-ink:#A52C23; --high-soft:#FBE7E5; --ok:#23663F; --ok-soft:#E2F2E8;
-  --warn:#7A4A06; --warn-soft:#FCEFD9; --nav:#13212C; --nav-muted:#A9B8C4;
-  --f-display:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;
-  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --bg:#EEF3FA; --surface:#FFFFFF; --ink:#0E1A2B; --muted:#56677C; --line:#D6E0EC; --line2:#E6EDF5;
+  --low:#1A73D9; --low-soft:#E6F2FD; --high:#C3362B; --high-ink:#A52C23; --high-soft:#FBE7E5; --ok:#23663F; --ok-soft:#E2F2E8;
+  --warn:#7A4A06; --warn-soft:#FCEFD9; --nav:#090A1E; --nav-muted:#A9C4DE;
+  --brand:#3BAAEE;
+  --grad:linear-gradient(135deg,#090A1E 0%,#10285F 55%,#1F86E0 100%);
+  --grad-btn:linear-gradient(135deg,#1A73D9 0%,#3BAAEE 100%);
+  --f-display:"Montserrat","Segoe UI",Arial,sans-serif;
+  --f-body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
   color-scheme:light;
 }
@@ -104,6 +108,26 @@ tr.wrong td{background:#FFF8F7}
 .spinner{width:26px;height:26px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--low);animation:sp .9s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== Marca Frioteam ===== */
+body{background:linear-gradient(180deg,#DDEBFB 0,#F3F7FC 380px) no-repeat,#F3F7FC}
+h1,h2,h3{font-weight:800;letter-spacing:-.01em}
+.top{background:var(--grad);box-shadow:0 10px 30px -18px rgba(16,40,95,.7)}
+.brand .logo{width:118px;height:auto;display:block}
+.brand b{font-weight:700;font-size:18px;padding-left:12px;border-left:1px solid rgba(255,255,255,.25)}
+.brandbar{background:var(--grad);border-radius:14px;padding:14px 18px;display:flex;align-items:center}
+.brandbar img{width:120px;height:auto;display:block}
+.card,.stat,.tablebox{border-color:#E1E8F2;border-radius:16px;box-shadow:0 10px 28px -20px rgba(16,40,95,.4)}
+.stat b{font-weight:800;background:var(--grad-btn);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat b small{-webkit-text-fill-color:var(--muted)}
+.btn{background:var(--grad-btn);font-weight:700;box-shadow:0 8px 18px -10px rgba(26,115,217,.9);transition:filter .15s}
+.btn:hover:not([disabled]){filter:brightness(1.06)}
+.btn.ghost{box-shadow:none}
+.btn.danger{background:linear-gradient(135deg,#B42F25 0%,#E2533F 100%);box-shadow:0 8px 18px -10px rgba(195,54,43,.9)}
+input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{background:#F5F8FC;border-radius:10px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px rgba(59,170,238,.18);background:#fff}
+.tabs button[aria-selected="true"]{color:var(--low)}
+.box{border-radius:18px}
 </style>
 </head>
 <body>
@@ -111,7 +135,8 @@ tr.wrong td{background:#FFF8F7}
 <!-- LOGIN -->
 <section id="v-login" class="login" hidden>
   <form id="f-login" class="card stack" novalidate>
-    <div class="stack-s"><p class="eyebrow">Panel de administración</p><h1 style="font-size:28px">Evaluación de Refrigeración</h1></div>
+    <div class="brandbar"><img src="logo.png" alt="Frioteam" width="120" height="27"></div>
+    <div class="stack-s"><p class="eyebrow">Panel de administración</p><h1 style="font-size:26px">Evaluación de Conocimientos</h1></div>
     <label class="f" for="in-email">Correo<input type="email" id="in-email" autocomplete="username"></label>
     <label class="f" for="in-pass">Contraseña<input type="password" id="in-pass" autocomplete="current-password"></label>
     <p class="err" id="login-err" role="alert" hidden></p>
@@ -127,7 +152,7 @@ tr.wrong td{background:#FFF8F7}
 <!-- APP -->
 <div id="v-app" hidden>
   <header class="top"><div class="in">
-    <div class="brand"><div class="mk" aria-hidden="true"><span></span><span></span></div><b id="top-title">Evaluación de Refrigeración</b><small>Panel de administración</small></div>
+    <div class="brand"><img class="logo" src="logo.png" alt="Frioteam" width="118" height="27"><b id="top-title">Evaluación de Conocimientos</b><small>Panel de administración</small></div>
     <div class="row" style="gap:16px;font-size:14px"><span id="top-user"></span><button type="button" id="btn-logout">Cerrar sesión</button></div>
   </div></header>
 
@@ -237,7 +262,7 @@ tr.wrong td{background:#FFF8F7}
       <div class="two">
         <form id="f-cfg" class="wide card stack" novalidate>
           <div class="grid2">
-            <label class="f" for="c-titulo">Título del examen<input type="text" id="c-titulo" maxlength="80"></label>
+            <label class="f" for="c-titulo" hidden>Título del examen<input type="text" id="c-titulo" maxlength="80"></label>
             <label class="f" for="c-eval">Nombre de la evaluación actual<input type="text" id="c-eval" maxlength="60"><small>Para el examen del próximo mes cámbialo (ej. "Diciembre 2026"). Así cada técnico puede rendir una vez por evaluación.</small></label>
             <label class="f" for="c-tema">Preguntas por tema<input type="number" id="c-tema" min="1" max="50"><small id="c-total"></small></label>
             <label class="f" for="c-min">Minutos<input type="number" id="c-min" min="1" max="240"></label>
@@ -401,7 +426,7 @@ let CFG = null, BANCO = null;
 async function cargarCfg(){
   const r = await api("GET", "config?id=eq.1&select=*");
   CFG = r && r[0];
-  $("top-title").textContent = CFG.titulo;
+
 }
 function totalPorExamen(porTema){
   if(!BANCO) return null;
@@ -427,7 +452,7 @@ $("f-cfg").addEventListener("submit", async e => {
   if([body.por_tema, body.minutos, body.max_salidas].some(n => !Number.isInteger(n) || n < 1) || !Number.isInteger(body.nota_aprobatoria) || body.nota_aprobatoria < 0){ err.textContent = "Revisa los números: deben ser enteros mayores que cero."; err.hidden = false; return; }
   try{
     const r = await api("PATCH", "config?id=eq.1", body, "return=representation");
-    CFG = r[0]; $("top-title").textContent = CFG.titulo; $("cfg-ok").hidden = false; evalSel = null;
+    CFG = r[0]; $("cfg-ok").hidden = false; evalSel = null;
   }catch(x){ err.textContent = "No se pudo guardar: " + x.message; err.hidden = false; }
 });
 $("btn-copy").onclick = async () => { try{ await navigator.clipboard.writeText($("exam-link").textContent); $("copy-ok").hidden = false; setTimeout(() => $("copy-ok").hidden = true, 2000); }catch(e){} };
