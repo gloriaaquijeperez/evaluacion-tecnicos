@@ -95,17 +95,35 @@ dl.kv dt{color:var(--muted)} dl.kv dd{margin:0;font-weight:500;min-width:0;overf
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 /* ===== Marca Frioteam ===== */
-body{background:linear-gradient(180deg,#DDEBFB 0,#F3F7FC 460px) no-repeat,#F3F7FC}
+body{background:url("fondo.png") 0 0/180px,radial-gradient(900px 420px at 100% 0,#CFE3FA 0,transparent 65%),linear-gradient(180deg,#DDEBFB 0,#F3F7FC 460px) no-repeat,#F3F7FC}
 h1,h2{font-weight:800;letter-spacing:-.01em}
-.hero{position:relative;overflow:hidden;background:var(--grad);color:#fff;border-radius:22px;padding:22px 22px 26px;display:flex;flex-direction:column;gap:8px;box-shadow:0 18px 40px -18px rgba(16,40,95,.65)}
+.hero{position:relative;overflow:hidden;background:var(--grad);color:#fff;border-radius:20px;padding:18px 20px 20px;display:flex;flex-direction:column;gap:6px;box-shadow:0 18px 40px -18px rgba(16,40,95,.65)}
 .hero::before,.hero::after{content:"";position:absolute;border-radius:50%;pointer-events:none}
 .hero::before{width:280px;height:280px;right:-100px;top:-120px;background:radial-gradient(circle,rgba(59,170,238,.5),transparent 70%)}
 .hero::after{width:200px;height:200px;left:-80px;bottom:-120px;background:radial-gradient(circle,rgba(59,170,238,.28),transparent 70%)}
 .hero > *{position:relative}
-.hero .logo{width:150px;height:auto;margin-bottom:12px}
+.hero .logo{width:124px;height:auto;margin-bottom:8px}
 .hero .eyebrow{color:#9FD3F7}
-.hero h1{font-size:30px;line-height:1.12}
+.hero h1{font-size:26px;line-height:1.12}
 .hero .sub{color:rgba(255,255,255,.78);font-size:14px}
+/* tarjeta de nota */
+.scorecard{position:relative;overflow:hidden;border-radius:22px;padding:22px 20px;color:#fff;display:flex;align-items:center;gap:18px;box-shadow:0 18px 36px -18px rgba(16,40,95,.6)}
+.scorecard.ok{background:linear-gradient(135deg,#0B5E34 0%,#1F9D55 55%,#4FD08A 100%)}
+.scorecard.bad{background:linear-gradient(135deg,#7E1A14 0%,#C3362B 55%,#F06B4F 100%)}
+.scorecard::before,.scorecard::after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.12);pointer-events:none}
+.scorecard::before{width:200px;height:200px;right:-70px;top:-90px}
+.scorecard::after{width:120px;height:120px;right:40px;bottom:-80px}
+.scorecard > *{position:relative}
+.sc-ring{--p:0;--arco:#B5F23D;flex:none;width:118px;height:118px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--arco) calc(var(--p) * 1%),rgba(0,0,0,.30) 0);box-shadow:0 0 0 4px rgba(255,255,255,.35),0 10px 26px rgba(0,0,0,.35),0 0 30px rgba(181,242,61,.55)}
+.scorecard.bad .sc-ring{--arco:#FFE3DC;box-shadow:0 0 0 4px rgba(255,255,255,.35),0 10px 26px rgba(0,0,0,.35),0 0 28px rgba(255,227,220,.45)}
+.sc-ring > div{width:88px;height:88px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;box-shadow:inset 0 2px 6px rgba(0,0,0,.12)}
+.sc-ring b{font-family:var(--f-display);font-weight:800;font-size:36px}
+.scorecard.ok .sc-ring b{color:#1F7A47} .scorecard.bad .sc-ring b{color:#B42F25}
+.sc-ring small{font-size:12px;color:var(--muted);margin-top:4px}
+.sc-info{display:flex;flex-direction:column;gap:10px;min-width:0}
+.sc-badge{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;background:#fff;border-radius:99px;padding:7px 13px;font-family:var(--f-display);font-weight:800;font-size:14px;letter-spacing:.03em;text-transform:uppercase}
+.scorecard.ok .sc-badge{color:#1F7A47} .scorecard.bad .sc-badge{color:#B42F25}
+.sc-info p{font-size:14px;color:rgba(255,255,255,.92)}
 .brandbar{background:var(--grad);border-radius:16px;padding:14px 18px;display:flex;align-items:center;box-shadow:0 12px 30px -16px rgba(16,40,95,.6)}
 .brandbar img{width:120px;height:auto;display:block}
 .card{border:1px solid #E1E8F2;border-radius:18px;padding:20px;box-shadow:0 10px 30px -18px rgba(16,40,95,.35)}
@@ -240,6 +258,13 @@ body::before{background:var(--navy)}
     <div class="okcircle" id="s-badc" hidden aria-hidden="true" style="background:var(--high-soft)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C3362B" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
     <p class="eyebrow" style="margin-top:10px" id="s-eyebrow">Examen enviado</p>
     <h1 style="font-size:32px" id="s-title">Gracias</h1>
+  </div>
+  <div class="scorecard" id="s-score" hidden>
+    <div class="sc-ring" id="sc-ring" aria-hidden="true"><div><b id="sc-nota"></b><small id="sc-de"></small></div></div>
+    <div class="sc-info">
+      <span class="sc-badge" id="sc-badge"></span>
+      <p id="sc-det"></p>
+    </div>
   </div>
   <div class="card">
     <p style="font-size:16px" id="s-msg"></p>
@@ -520,7 +545,8 @@ async function enviar(motivo){
 function terminadoDesdeServidor(r, local){
   const base = local || leerLocal() || {};
   const info = { id: base.id || (E && E.id), token: base.token || (E && E.token), nombre: base.nombre || (E && E.nombre), dni: base.dni || (E && E.dni), zona: base.zona || (E && E.zona),
-                 terminado: true, envio: r.envio, fin: r.fin, cierre: r.cierre || null };
+                 terminado: true, envio: r.envio, fin: r.fin, cierre: r.cierre || null,
+                 nota: r.nota, total: r.total, nota_aprobatoria: r.nota_aprobatoria };
   guardarLocal(info);
   if(timer){ clearInterval(timer); timer = null; }
   try{ if(document.fullscreenElement) document.exitFullscreen().catch(()=>{}); }catch(e){}
@@ -528,14 +554,29 @@ function terminadoDesdeServidor(r, local){
   E = null;
   pantallaEnviado(info);
 }
+const ICONO_OK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 16.9 6.1 20.1l1.3-6.6L2.5 8.9l6.6-.8z"/></svg>';
+const ICONO_MAL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>';
 function pantallaEnviado(info){
   const anulado = info.cierre === "salidas";
   $("s-title").textContent = anulado ? "Examen anulado" : "Gracias, " + String(info.nombre || "").split(" ")[0];
   $("s-eyebrow").textContent = anulado ? "Examen cerrado" : "Examen enviado";
-  $("s-okc").hidden = anulado; $("s-badc").hidden = !anulado;
+  // La nota solo llega del servidor si el examen terminó y no fue anulado
+  const conNota = !anulado && Number.isInteger(info.nota) && info.total > 0;
+  const aprobo = conNota && info.nota >= info.nota_aprobatoria;
+  $("s-okc").hidden = anulado || conNota; $("s-badc").hidden = !anulado;
+  $("s-score").hidden = !conNota;
+  if(conNota){
+    $("s-score").className = "scorecard " + (aprobo ? "ok" : "bad");
+    $("sc-ring").style.setProperty("--p", Math.round(info.nota / info.total * 100));
+    $("sc-nota").textContent = info.nota; $("sc-de").textContent = "de " + info.total;
+    $("sc-badge").innerHTML = (aprobo ? ICONO_OK + "Aprobado" : ICONO_MAL + "Desaprobado");
+    $("sc-det").textContent = info.nota + " respuestas correctas · Nota mínima: " + info.nota_aprobatoria;
+  }
   $("s-msg").innerHTML = anulado
     ? "Tu examen se cerró automáticamente porque <b>saliste de la página</b> (cambiaste de pestaña o de aplicación, recargaste o se bloqueó la pantalla). Quedó registrado como <b>anulado</b> y el evaluador revisará el caso."
-    : "Tu examen quedó guardado en el sistema. <b>El evaluador revisará los resultados</b> y te los comunicará.";
+    : !conNota ? "Tu examen quedó guardado en el sistema. <b>El evaluador revisará los resultados</b> y te los comunicará."
+    : aprobo ? "¡Felicitaciones! Tu examen quedó guardado en el sistema."
+    : "Tu examen quedó guardado en el sistema. <b>El evaluador te indicará los siguientes pasos.</b>";
   $("s-nombre").textContent = info.nombre || ""; $("s-dni").textContent = info.dni || ""; $("s-zona").textContent = info.zona || "";
   $("s-fecha").textContent = info.fin ? fecha(info.fin) : ""; $("s-id").textContent = info.envio || "";
   show("v-sent");
