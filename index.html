@@ -157,7 +157,10 @@ body::before{background:var(--navy)}
 .who{color:rgba(255,255,255,.8)}
 .status.ok{color:#7EE2A8} .status.wait{color:rgba(255,255,255,.65)} .status.bad,.exits{color:#FF9B90}
 .timer{color:#fff}
+.timer .reloj{flex:none;color:#9FD3F7}
 .timer.late{color:#FF8A7A}
+.timer.late .reloj{color:#FF8A7A;animation:latido 1s ease-in-out infinite}
+@keyframes latido{50%{transform:scale(1.15)}}
 .drain{background:rgba(255,255,255,.18)} .drain span{background:linear-gradient(90deg,#3BAAEE,#9FD3F7)} .drain.late span{background:#FF6B5E}
 .qtext{font-weight:600}
 .opt{border-radius:14px;transition:border-color .15s,background .15s}
@@ -239,7 +242,7 @@ body::before{background:var(--navy)}
         <span class="status ok" id="ex-status">● Respuestas guardadas</span>
         <span class="exits" id="ex-exits" hidden></span>
       </div>
-      <div class="timer" id="ex-timer" aria-live="off"><i></i><span id="ex-time">--:--</span></div>
+      <div class="timer" id="ex-timer" aria-live="off"><svg class="reloj" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9.5 2.5h5M12 2.5V5"/><path d="M18.5 5.5l1.5 1.5"/></svg><span id="ex-time">--:--</span></div>
     </div>
     <div class="drain" id="ex-drain"><span id="ex-bar" style="width:100%"></span></div>
   </header>
