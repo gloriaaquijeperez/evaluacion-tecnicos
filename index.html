@@ -171,7 +171,14 @@ body::before{background:var(--navy)}
 .qgrid button.done{background:#DCEEFD;color:var(--low)}
 /* Tablet y PC: columna un poco más ancha y los 4 datos del examen en una fila */
 @media (min-width:700px){.wrap,.top .in,.nav .in{max-width:660px}.rules{grid-template-columns:repeat(4,minmax(0,1fr))}.hero{padding:24px 26px 26px}.hero h1{font-size:30px}}
-</style>
+/* Encabezado a todo el ancho: la foto se difumina hacia el fondo de la página (sin recuadro) */
+body{overflow-x:clip}
+.hero{width:100vw;margin:-24px calc(50% - 50vw) 0;border-radius:0;box-shadow:none;padding:30px 0 110px;gap:0;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 105px),transparent 100%);mask-image:linear-gradient(180deg,#000 calc(100% - 105px),transparent 100%);
+  background:linear-gradient(90deg,rgba(9,10,30,.96) 0%,rgba(11,22,58,.84) 38%,rgba(11,22,58,.30) 72%,rgba(11,22,58,.10) 100%),url("encabezado.jpg") right center/cover no-repeat,var(--grad)}
+.hero::after{display:none}
+.hero-in{position:relative;z-index:1;width:100%;max-width:560px;margin:0 auto;padding:0 max(18px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:6px}
+.hero + .rules{margin-top:-70px;position:relative;z-index:2}
+@media (min-width:700px){.hero{padding:40px 0 120px}.hero-in{max-width:660px}.hero h1{font-size:34px}}</style>
 </head>
 <body>
 
@@ -190,12 +197,12 @@ body::before{background:var(--navy)}
 
 <!-- Inicio -->
 <section id="v-start" class="wrap" hidden>
-  <header class="hero">
+  <header class="hero"><div class="hero-in">
     <img class="logo" src="logo.png" alt="Frioteam" width="150" height="34">
     <p class="eyebrow" id="st-eval">Evaluación de conocimientos · Técnicos</p>
     <h1 id="st-title">Evaluación de Conocimientos</h1>
     <p class="sub">Examen individual. Lee las reglas y completa tus datos.</p>
-  </header>
+  </div></header>
   <div class="rules">
     <div class="rule"><b id="r-n">20</b><small>preguntas</small></div>
     <div class="rule"><b id="r-min">20 min</b><small>tiempo para resolver</small></div>
