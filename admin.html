@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Panel · Evaluación de Refrigeración</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#EEF2F5; --surface:#FFFFFF; --ink:#13212C; --muted:#52626F; --line:#D3DCE3; --line2:#E4EAEF;
+  --low:#1E5DA6; --low-soft:#E3EDF8; --high:#C3362B; --high-ink:#A52C23; --high-soft:#FBE7E5; --ok:#23663F; --ok-soft:#E2F2E8;
+  --warn:#7A4A06; --warn-soft:#FCEFD9; --nav:#13212C; --nav-muted:#A9B8C4;
+  --f-display:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;line-height:1.1;margin:0;text-wrap:balance}
+p{margin:0}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit}
+:focus-visible{outline:3px solid var(--low);outline-offset:2px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.stack{display:flex;flex-direction:column;gap:16px}
+.stack-s{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{border:0;border-radius:10px;padding:0 16px;min-height:44px;font-weight:600;font-size:14px;cursor:pointer;background:var(--low);color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:var(--high)}
+.btn.sm{min-height:34px;padding:0 12px;font-size:13px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.lnk{background:none;border:0;color:var(--low);font-weight:600;cursor:pointer;padding:0;font-size:13px;white-space:nowrap}
+.lnk.red{color:var(--high-ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.chip{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;white-space:nowrap}
+.chip.ok{background:var(--ok-soft);color:var(--ok)} .chip.bad{background:var(--high-soft);color:var(--high-ink)} .chip.info{background:var(--low-soft);color:var(--low)} .chip.warn{background:var(--warn-soft);color:var(--warn)} .chip.gray{background:var(--line2);color:var(--muted)}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:500;font-size:14px}
+label.f small{font-weight:400;color:var(--muted);font-size:12px}
+input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:15px;width:100%}
+textarea{resize:vertical;min-height:70px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.check input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--low);flex:none}
+.err{color:var(--high-ink);font-size:14px}
+.okmsg{color:var(--ok);font-size:14px;font-weight:500}
+.note{font-size:13px;background:var(--low-soft);color:var(--ink);border-radius:8px;padding:10px 12px}
+
+.top{background:var(--nav);color:#fff}
+.top .in{max-width:1200px;margin:0 auto;padding:14px max(16px,env(safe-area-inset-right,0px)) 14px max(16px,env(safe-area-inset-left,0px));display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand .mk{display:flex;gap:4px}.brand .mk span{width:16px;height:6px;border-radius:3px;background:#71A9EA}.brand .mk span+span{background:#F0766A}
+.brand b{font-family:var(--f-display);font-size:20px}
+.brand small{color:var(--nav-muted);font-size:13px}
+.top button{background:none;border:0;color:var(--nav-muted);text-decoration:underline;cursor:pointer;font-size:14px}
+.main{max-width:1200px;margin:0 auto;padding:24px max(16px,env(safe-area-inset-right,0px)) 56px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:20px}
+.login{max-width:420px;margin:56px auto;padding:0 16px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 12px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--low)}
+.headrow{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:2px}
+.stat span{font-size:13px;color:var(--muted)}
+.stat b{font-family:var(--f-display);font-size:34px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat b small{font-size:18px;color:var(--muted)}
+.two{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.two > .wide{flex:999 1 620px;min-width:0}
+.two > .side{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.tablebox{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:12px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 10px;border-bottom:1px solid var(--line2);vertical-align:top}
+th:first-child,td:first-child{padding-left:16px} th:last-child,td:last-child{padding-right:16px}
+tr:last-child td{border-bottom:0}
+td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.wrong td{background:#FFF8F7}
+.barrow{display:flex;flex-direction:column;gap:6px}
+.barrow .t{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.bar{height:8px;border-radius:4px;background:var(--line2);overflow:hidden}.bar span{display:block;height:100%;border-radius:4px}
+.cells{display:flex;gap:4px}.cells span{height:10px;flex:1;border-radius:3px;background:#F2C5C1}.cells span.y{background:var(--low)}
+.events{list-style:none;margin:0;padding:0}
+.events li{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid var(--line2);font-size:14px}
+.events li:last-child{border-bottom:0}
+.events .tm{font-family:var(--f-mono);font-size:13px;color:var(--muted);width:44px;flex:none}
+.events .d{width:10px;height:10px;border-radius:50%;margin-top:6px;flex:none}
+.bigscore{display:flex;align-items:baseline;gap:4px;font-family:var(--f-display);font-weight:700}
+.bigscore b{font-size:56px;line-height:1}.bigscore span{font-size:22px;color:var(--muted)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+.bq{padding:12px 0;border-bottom:1px solid var(--line2);display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.bq:last-child{border-bottom:0}
+.bq .txt{flex:1 1 420px;min-width:0;display:flex;flex-direction:column;gap:3px}
+.bq.off .txt{opacity:.55}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.layer{position:fixed;inset:0;z-index:20;background:rgba(8,14,20,.6);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
+.box{background:var(--surface);border-radius:14px;padding:22px;max-width:640px;width:100%;display:flex;flex-direction:column;gap:14px;max-height:calc(100vh - 32px);overflow-y:auto}
+.spinner{width:26px;height:26px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--low);animation:sp .9s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<section id="v-login" class="login" hidden>
+  <form id="f-login" class="card stack" novalidate>
+    <div class="stack-s"><p class="eyebrow">Panel de administración</p><h1 style="font-size:28px">Evaluación de Refrigeración</h1></div>
+    <label class="f" for="in-email">Correo<input type="email" id="in-email" autocomplete="username"></label>
+    <label class="f" for="in-pass">Contraseña<input type="password" id="in-pass" autocomplete="current-password"></label>
+    <p class="err" id="login-err" role="alert" hidden></p>
+    <button class="btn" type="submit" id="btn-login">Entrar</button>
+  </form>
+</section>
+
+<!-- MENSAJE -->
+<section id="v-msg" class="login" hidden>
+  <div class="card stack"><h2 style="font-size:24px" id="msg-title"></h2><p class="muted" id="msg-text"></p><button class="btn ghost" type="button" id="btn-msg-out">Cerrar sesión</button></div>
+</section>
+
+<!-- APP -->
+<div id="v-app" hidden>
+  <header class="top"><div class="in">
+    <div class="brand"><div class="mk" aria-hidden="true"><span></span><span></span></div><b id="top-title">Evaluación de Refrigeración</b><small>Panel de administración</small></div>
+    <div class="row" style="gap:16px;font-size:14px"><span id="top-user"></span><button type="button" id="btn-logout">Cerrar sesión</button></div>
+  </div></header>
+
+  <main class="main">
+    <div class="tabs" role="tablist">
+      <button role="tab" type="button" aria-selected="true" data-tab="t-res">Resultados</button>
+      <button role="tab" type="button" aria-selected="false" data-tab="t-bank">Banco de preguntas</button>
+      <button role="tab" type="button" aria-selected="false" data-tab="t-cfg">Configuración</button>
+    </div>
+
+    <!-- RESULTADOS -->
+    <section id="t-res" class="stack" style="gap:20px">
+      <div id="res-list" class="stack" style="gap:20px">
+        <div class="headrow">
+          <div class="stack-s">
+            <h1 style="font-size:34px">Resultados</h1>
+            <div class="row" style="gap:16px">
+              <label class="row" for="sel-eval" style="font-size:14px;color:var(--muted)">Evaluación
+                <select id="sel-eval" style="width:auto;min-width:200px"></select>
+              </label>
+              <label class="row" for="sel-zona" style="font-size:14px;color:var(--muted)">Zona
+                <select id="sel-zona" style="width:auto;min-width:160px"><option value="*">Todas</option></select>
+              </label>
+            </div>
+          </div>
+          <div class="row">
+            <span class="muted" style="font-size:13px" id="upd"></span>
+            <button class="btn ghost" type="button" id="btn-refresh">Actualizar</button>
+            <button class="btn" type="button" id="btn-xls"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>Descargar Excel</button>
+          </div>
+        </div>
+        <p class="okmsg" id="xls-msg" hidden></p>
+        <div class="stats">
+          <div class="stat"><span>Técnicos que terminaron</span><b id="st-n">0</b></div>
+          <div class="stat"><span id="st-pass-l">Aprobados</span><b id="st-pass">0</b></div>
+          <div class="stat"><span>Nota promedio</span><b id="st-avg">–</b></div>
+          <div class="stat"><span>Anulados (salieron de la página)</span><b id="st-exit" style="color:var(--high-ink)">0</b></div>
+        </div>
+        <div class="two">
+          <div class="wide tablebox"><div class="scroll"><table style="min-width:860px">
+            <thead><tr><th>Técnico</th><th>DNI</th><th>Zona</th><th>Nota</th><th>Resultado</th><th>Salidas</th><th>Tiempo</th><th>Inicio / envío</th><th><span style="font-size:0">Acciones</span></th></tr></thead>
+            <tbody id="tb"><tr><td colspan="9" class="empty">Cargando…</td></tr></tbody>
+          </table></div></div>
+          <aside class="side">
+            <section class="card stack"><h2 style="font-size:20px">Temas con más errores</h2><p class="muted" style="font-size:13px">Porcentaje de respuestas incorrectas por tema.</p><div id="temas" class="stack" style="gap:14px"></div></section>
+            <section class="card stack-s"><h2 style="font-size:20px">Preguntas más falladas</h2><div id="topq" class="stack" style="gap:12px"></div></section>
+          </aside>
+        </div>
+      </div>
+
+      <!-- detalle -->
+      <div id="res-det" class="stack" style="gap:20px" hidden>
+        <button type="button" class="lnk" id="btn-back" style="align-self:flex-start;font-size:14px">← Volver a resultados</button>
+        <section class="card" style="display:flex;flex-wrap:wrap;gap:28px;justify-content:space-between;align-items:flex-start;padding:22px">
+          <div class="stack-s" style="min-width:0">
+            <h1 style="font-size:32px" id="d-name"></h1>
+            <dl style="display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0;font-size:14px">
+              <dt class="muted">DNI</dt><dd class="mono" style="margin:0" id="d-dni"></dd>
+              <dt class="muted">Zona</dt><dd style="margin:0" id="d-zona"></dd>
+              <dt class="muted">Evaluación</dt><dd style="margin:0" id="d-eval"></dd>
+              <dt class="muted">N.º de envío</dt><dd class="mono" style="margin:0" id="d-id"></dd>
+              <dt class="muted">Cierre</dt><dd style="margin:0" id="d-cierre"></dd>
+            </dl>
+          </div>
+          <div class="row" style="gap:28px;align-items:flex-start">
+            <div class="stack-s"><span class="muted" style="font-size:13px">Nota</span><div class="bigscore"><b id="d-score"></b><span id="d-total"></span></div><span id="d-badge"></span></div>
+            <div class="stack-s"><span class="muted" style="font-size:13px">Tiempo usado</span><b class="mono" style="font-size:28px;font-weight:500" id="d-used"></b><span class="muted" style="font-size:12px" id="d-of"></span></div>
+            <div class="stack-s"><span class="muted" style="font-size:13px">Salidas</span><b class="mono" style="font-size:28px;font-weight:500" id="d-exits"></b><span class="muted" style="font-size:12px" id="d-away"></span></div>
+          </div>
+        </section>
+        <div class="two">
+          <section class="card stack" style="flex:1 1 340px;min-width:0"><h2 style="font-size:20px">Aciertos por tema</h2><div id="d-temas" class="stack" style="gap:12px"></div></section>
+          <section class="card stack" style="flex:1 1 340px;min-width:0"><h2 style="font-size:20px">Registro del examen</h2><ol class="events" id="d-events"></ol></section>
+        </div>
+        <section class="tablebox">
+          <div style="padding:16px;border-bottom:1px solid var(--line)"><h2 style="font-size:20px">Respuestas</h2></div>
+          <div class="scroll"><table style="min-width:860px">
+            <thead><tr><th>N.º</th><th>Pregunta</th><th>Respuesta del técnico</th><th>Respuesta correcta</th><th>Resultado</th></tr></thead>
+            <tbody id="d-tb"></tbody>
+          </table></div>
+        </section>
+        <section class="card stack-s" style="border-color:#F2C5C1">
+          <h2 style="font-size:18px">Permitir que vuelva a rendir</h2>
+          <p class="muted" style="font-size:14px">Borra este examen para que el técnico pueda rendir de nuevo esta evaluación con su DNI. Úsalo solo si hubo un problema (se le apagó el celular, se equivocó de DNI, etc.).</p>
+          <div><button class="btn ghost sm" type="button" id="btn-del">Borrar este examen</button></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- BANCO -->
+    <section id="t-bank" class="stack" hidden>
+      <div class="headrow">
+        <div class="stack-s"><h1 style="font-size:34px">Banco de preguntas</h1><p class="muted" style="font-size:14px" id="bank-sum"></p></div>
+        <div class="row">
+          <button class="btn ghost" type="button" id="btn-tpl">Descargar banco en Excel</button>
+          <button class="btn ghost" type="button" id="btn-imp">Importar desde Excel</button>
+          <button class="btn" type="button" id="btn-new">Agregar pregunta</button>
+        </div>
+      </div>
+      <p class="note">Las preguntas <b>desactivadas</b> no salen en los exámenes nuevos, pero se conservan en los resultados anteriores. Para reemplazar todo el banco, descarga el Excel, edítalo e impórtalo marcando "desactivar las actuales".</p>
+      <div id="bank" class="stack"></div>
+    </section>
+
+    <!-- CONFIG -->
+    <section id="t-cfg" class="stack" hidden>
+      <h1 style="font-size:34px">Configuración</h1>
+      <div class="two">
+        <form id="f-cfg" class="wide card stack" novalidate>
+          <div class="grid2">
+            <label class="f" for="c-titulo">Título del examen<input type="text" id="c-titulo" maxlength="80"></label>
+            <label class="f" for="c-eval">Nombre de la evaluación actual<input type="text" id="c-eval" maxlength="60"><small>Para el examen del próximo mes cámbialo (ej. "Diciembre 2026"). Así cada técnico puede rendir una vez por evaluación.</small></label>
+            <label class="f" for="c-tema">Preguntas por tema<input type="number" id="c-tema" min="1" max="50"><small id="c-total"></small></label>
+            <label class="f" for="c-min">Minutos<input type="number" id="c-min" min="1" max="240"></label>
+            <label class="f" for="c-sal">Salidas para anular el examen<input type="number" id="c-sal" min="1" max="50"><small>Con 1 (recomendado), el examen se anula a la primera salida de la página.</small></label>
+            <label class="f" for="c-ap">Nota mínima para aprobar<input type="number" id="c-ap" min="0" max="200"></label>
+          </div>
+          <label class="check" for="c-abierto"><input type="checkbox" id="c-abierto"> <span><b>Examen abierto.</b> Si lo desmarcas, nadie puede empezar un examen nuevo (los que están en curso pueden terminar).</span></label>
+          <p class="err" id="cfg-err" hidden></p><p class="okmsg" id="cfg-ok" hidden>Cambios guardados.</p>
+          <div><button class="btn" type="submit">Guardar cambios</button></div>
+        </form>
+        <aside class="side">
+          <section class="card stack-s">
+            <h2 style="font-size:20px">Link para los técnicos</h2>
+            <p class="mono" style="font-size:13px;overflow-wrap:anywhere" id="exam-link"></p>
+            <div><button class="btn ghost sm" type="button" id="btn-copy">Copiar link</button> <span class="okmsg" id="copy-ok" hidden>Copiado</span></div>
+          </section>
+        </aside>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Carga inicial -->
+<section id="v-load" class="login"><div class="row" style="justify-content:center;gap:12px;margin-top:40px"><div class="spinner" aria-hidden="true"></div><span class="muted">Cargando…</span></div></section>
+
+<!-- Diálogo confirmar -->
+<div class="layer" id="l-confirm" hidden role="dialog" aria-modal="true" aria-labelledby="cf-title">
+  <div class="box" style="max-width:440px">
+    <h2 style="font-size:22px" id="cf-title"></h2><p id="cf-text"></p>
+    <div class="row" style="justify-content:flex-end"><button class="btn ghost" type="button" id="cf-no">Cancelar</button><button class="btn danger" type="button" id="cf-yes">Confirmar</button></div>
+  </div>
+</div>
+
+<!-- Diálogo pregunta -->
+<div class="layer" id="l-q" hidden role="dialog" aria-modal="true" aria-labelledby="q-title">
+  <form class="box" id="f-q" novalidate>
+    <h2 style="font-size:22px" id="q-title">Agregar pregunta</h2>
+    <label class="f" for="q-tema">Tema<input type="text" id="q-tema" list="dl-temas" maxlength="80"></label>
+    <datalist id="dl-temas"></datalist>
+    <label class="f" for="q-texto">Pregunta<textarea id="q-texto" maxlength="600"></textarea></label>
+    <label class="f" for="q-ok">Respuesta correcta<input type="text" id="q-ok" maxlength="300"></label>
+    <label class="f" for="q-b1">Incorrecta 1<input type="text" id="q-b1" maxlength="300"></label>
+    <label class="f" for="q-b2">Incorrecta 2<input type="text" id="q-b2" maxlength="300"></label>
+    <label class="f" for="q-b3">Incorrecta 3<input type="text" id="q-b3" maxlength="300"></label>
+    <label class="check" for="q-act"><input type="checkbox" id="q-act" checked> Activa (puede salir en los exámenes)</label>
+    <p class="err" id="q-err" hidden></p>
+    <div class="row" style="justify-content:flex-end"><button class="btn ghost" type="button" id="q-cancel">Cancelar</button><button class="btn" type="submit" id="q-save">Guardar</button></div>
+  </form>
+</div>
+
+<!-- Diálogo importar -->
+<div class="layer" id="l-imp" hidden role="dialog" aria-modal="true" aria-labelledby="i-title">
+  <div class="box">
+    <h2 style="font-size:22px" id="i-title">Importar preguntas desde Excel</h2>
+    <p class="muted" style="font-size:14px">El Excel debe tener estas columnas en la primera fila: <b>Tema</b>, <b>Pregunta</b>, <b>Correcta</b>, <b>Incorrecta 1</b>, <b>Incorrecta 2</b>, <b>Incorrecta 3</b>. Puedes usar el botón "Descargar banco en Excel" como plantilla.</p>
+    <label class="f" for="i-file">Archivo (.xlsx o .csv)<input type="file" id="i-file" accept=".xlsx,.xls,.csv"></label>
+    <div id="i-prev" class="stack-s"></div>
+    <label class="check" for="i-off"><input type="checkbox" id="i-off" checked> Desactivar las preguntas que ya están en el banco (recomendado si este Excel reemplaza al anterior)</label>
+    <p class="err" id="i-err" hidden></p><p class="okmsg" id="i-ok" hidden></p>
+    <div class="row" style="justify-content:flex-end"><button class="btn ghost" type="button" id="i-cancel">Cerrar</button><button class="btn" type="button" id="i-go" disabled>Importar</button></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="config.js"></script>
+<script>
+(function(){
+"use strict";
+const CONF = window.EVAL_CONFIG || {};
+const URL_BASE = String(CONF.SUPABASE_URL || "").replace(/\/+$/, "");
+const KEY = String(CONF.SUPABASE_ANON_KEY || "");
+const LS = "eval_refri_admin_sesion";
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const mmss = s => { s = Math.max(0, Math.round(s)); return String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0"); };
+const hora = ts => new Date(ts).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"});
+const fecha = ts => new Date(ts).toLocaleString("es-PE",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+const MOTIVOS = { tecnico: "Enviado por el técnico", tiempo: "Tiempo agotado", salidas: "ANULADO: salió de la página", vencido: "No lo envió (se cerró al vencer el tiempo)" };
+
+/* ================= Sesión y API ================= */
+let S = null;
+function guardarSesion(){ try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} }
+function leerSesion(){ try{ return JSON.parse(localStorage.getItem(LS) || "null"); }catch(e){ return null; } }
+function borrarSesion(){ S = null; try{ localStorage.removeItem(LS); }catch(e){} }
+async function auth(path, body){
+  const r = await fetch(URL_BASE + "/auth/v1/" + path, { method: "POST", headers: { "Content-Type": "application/json", "apikey": KEY }, body: JSON.stringify(body) });
+  const d = await r.json().catch(() => ({}));
+  if(!r.ok) throw new Error(d.error_description || d.msg || d.message || ("HTTP_" + r.status));
+  return d;
+}
+function tomarSesion(d){ S = { access_token: d.access_token, refresh_token: d.refresh_token, expires_at: Date.now() + (d.expires_in || 3600) * 1000, email: (d.user && d.user.email) || (S && S.email) || "" }; guardarSesion(); }
+async function token(){
+  if(!S) throw new Error("SIN_SESION");
+  if(S.expires_at - Date.now() < 90000){
+    try{ tomarSesion(await auth("token?grant_type=refresh_token", { refresh_token: S.refresh_token })); }
+    catch(e){ borrarSesion(); mostrarLogin("Tu sesión venció. Vuelve a entrar."); throw new Error("SIN_SESION"); }
+  }
+  return S.access_token;
+}
+async function api(method, path, body, prefer){
+  const h = { "apikey": KEY, "Authorization": "Bearer " + await token(), "Content-Type": "application/json" };
+  if(prefer) h["Prefer"] = prefer;
+  const r = await fetch(URL_BASE + "/rest/v1/" + path, { method, headers: h, body: body === undefined ? undefined : JSON.stringify(body) });
+  const t = await r.text(); let d = null; try{ d = t ? JSON.parse(t) : null; }catch(e){}
+  if(r.status === 401){ borrarSesion(); mostrarLogin("Tu sesión venció. Vuelve a entrar."); throw new Error("SIN_SESION"); }
+  if(!r.ok) throw new Error((d && (d.message || d.hint)) || ("HTTP_" + r.status));
+  return d;
+}
+const rpc = (fn, args) => api("POST", "rpc/" + fn, args || {});
+const enc = encodeURIComponent;
+
+/* ================= Vistas ================= */
+function vista(id){ ["v-load","v-login","v-msg","v-app"].forEach(v => $(v).hidden = v !== id); window.scrollTo(0,0); }
+function mostrarLogin(msg){ vista("v-login"); const e = $("login-err"); e.textContent = msg || ""; e.hidden = !msg; }
+function mensaje(t, x){ $("msg-title").textContent = t; $("msg-text").textContent = x; vista("v-msg"); }
+$("btn-msg-out").onclick = () => { borrarSesion(); mostrarLogin(); };
+$("btn-logout").onclick = async () => { try{ await fetch(URL_BASE + "/auth/v1/logout", { method: "POST", headers: { apikey: KEY, Authorization: "Bearer " + S.access_token } }); }catch(e){} borrarSesion(); mostrarLogin(); };
+
+function confirmar(titulo, texto, etiqueta){
+  return new Promise(res => {
+    $("cf-title").textContent = titulo; $("cf-text").textContent = texto; $("cf-yes").textContent = etiqueta || "Confirmar";
+    $("l-confirm").hidden = false;
+    const fin = v => { $("l-confirm").hidden = true; $("cf-yes").onclick = $("cf-no").onclick = null; res(v); };
+    $("cf-yes").onclick = () => fin(true); $("cf-no").onclick = () => fin(false);
+  });
+}
+
+document.querySelectorAll("[data-tab]").forEach(t => t.onclick = () => {
+  document.querySelectorAll("[data-tab]").forEach(x => { x.setAttribute("aria-selected", x === t ? "true" : "false"); $(x.dataset.tab).hidden = x !== t; });
+  if(t.dataset.tab === "t-bank") cargarBanco();
+  if(t.dataset.tab === "t-cfg") pintarCfg();
+  if(t.dataset.tab === "t-res") cargarResultados();
+});
+
+/* ================= Login ================= */
+$("f-login").addEventListener("submit", async e => {
+  e.preventDefault();
+  const b = $("btn-login"); b.disabled = true; b.textContent = "Entrando…"; $("login-err").hidden = true;
+  try{
+    tomarSesion(await auth("token?grant_type=password", { email: $("in-email").value.trim(), password: $("in-pass").value }));
+    $("in-pass").value = "";
+    await entrar();
+  }catch(x){
+    const m = /invalid/i.test(x.message) ? "Correo o contraseña incorrectos." : /fetch|network/i.test(x.message) ? "No hay conexión con el servidor." : "No se pudo entrar (" + x.message + ").";
+    mostrarLogin(m);
+  }finally{ b.disabled = false; b.textContent = "Entrar"; }
+});
+
+async function entrar(){
+  vista("v-load");
+  const ok = await rpc("es_admin");
+  if(ok !== true){ mensaje("Sin permiso", "Tu usuario (" + (S.email || "") + ") existe, pero no está registrado como administrador. Pide que lo agreguen en la tabla admins de Supabase."); return; }
+  $("top-user").textContent = S.email;
+  await cargarCfg();
+  vista("v-app");
+  await cargarResultados(true);
+}
+
+/* ================= Config ================= */
+let CFG = null, BANCO = null;
+async function cargarCfg(){
+  const r = await api("GET", "config?id=eq.1&select=*");
+  CFG = r && r[0];
+  $("top-title").textContent = CFG.titulo;
+}
+function totalPorExamen(porTema){
+  if(!BANCO) return null;
+  const t = {}; BANCO.filter(p => p.activa).forEach(p => t[p.tema] = (t[p.tema] || 0) + 1);
+  return Object.values(t).reduce((s, n) => s + Math.min(n, porTema), 0);
+}
+async function pintarCfg(){
+  if(!BANCO) try{ BANCO = await api("GET", "preguntas?select=*&order=tema.asc,id.asc"); }catch(e){}
+  $("c-titulo").value = CFG.titulo; $("c-eval").value = CFG.evaluacion; $("c-tema").value = CFG.por_tema; $("c-min").value = CFG.minutos;
+  $("c-sal").value = CFG.max_salidas; $("c-ap").value = CFG.nota_aprobatoria; $("c-abierto").checked = CFG.abierto;
+  actualizarTotal();
+  $("cfg-err").hidden = true; $("cfg-ok").hidden = true;
+  $("exam-link").textContent = location.href.replace(/admin\.html.*$/, "").replace(/[?#].*$/, "");
+}
+function actualizarTotal(){ const n = totalPorExamen(Number($("c-tema").value) || 0); $("c-total").textContent = n === null ? "" : "Con el banco actual, cada técnico recibirá " + n + " preguntas."; }
+$("c-tema").addEventListener("input", actualizarTotal);
+$("f-cfg").addEventListener("submit", async e => {
+  e.preventDefault();
+  const body = { titulo: $("c-titulo").value.trim(), evaluacion: $("c-eval").value.trim(), por_tema: Number($("c-tema").value), minutos: Number($("c-min").value),
+                 max_salidas: Number($("c-sal").value), nota_aprobatoria: Number($("c-ap").value), abierto: $("c-abierto").checked };
+  const err = $("cfg-err"); err.hidden = true; $("cfg-ok").hidden = true;
+  if(!body.titulo || !body.evaluacion){ err.textContent = "El título y el nombre de la evaluación no pueden estar vacíos."; err.hidden = false; return; }
+  if([body.por_tema, body.minutos, body.max_salidas].some(n => !Number.isInteger(n) || n < 1) || !Number.isInteger(body.nota_aprobatoria) || body.nota_aprobatoria < 0){ err.textContent = "Revisa los números: deben ser enteros mayores que cero."; err.hidden = false; return; }
+  try{
+    const r = await api("PATCH", "config?id=eq.1", body, "return=representation");
+    CFG = r[0]; $("top-title").textContent = CFG.titulo; $("cfg-ok").hidden = false; evalSel = null;
+  }catch(x){ err.textContent = "No se pudo guardar: " + x.message; err.hidden = false; }
+});
+$("btn-copy").onclick = async () => { try{ await navigator.clipboard.writeText($("exam-link").textContent); $("copy-ok").hidden = false; setTimeout(() => $("copy-ok").hidden = true, 2000); }catch(e){} };
+
+/* ================= Resultados ================= */
+let INT = [], zonaSel = "*", evalSel = null, detalleId = null, poll = null;
+const SEL = "id,evaluacion,nombre,dni,zona,inicio,limite,fin,cierre,nota,total,nota_aprobatoria,salidas,segundos_fuera,envio," +
+            "intento_preguntas(orden,tema,texto,correcta,opciones,respuesta,es_correcta),eventos(tipo,segundos,creado)";
+async function cargarResultados(primera){
+  try{
+    try{ await rpc("admin_cerrar_vencidos"); }catch(e){ if(e.message === "SIN_SESION") return; }
+    const evs = await api("GET", "intentos?select=evaluacion&order=inicio.desc");
+    const lista = [CFG.evaluacion].concat((evs || []).map(x => x.evaluacion)).filter((v, i, a) => a.indexOf(v) === i);
+    if(evalSel === null || (evalSel !== "*" && !lista.includes(evalSel))) evalSel = CFG.evaluacion;
+    $("sel-eval").innerHTML = lista.map(v => '<option value="' + esc(v) + '"' + (v === evalSel ? " selected" : "") + '>' + esc(v) + (v === CFG.evaluacion ? " (actual)" : "") + '</option>').join("") +
+      '<option value="*"' + (evalSel === "*" ? " selected" : "") + '>Todas las evaluaciones</option>';
+    INT = await api("GET", "intentos?select=" + SEL + (evalSel === "*" ? "" : "&evaluacion=eq." + enc(evalSel)) + "&order=inicio.desc");
+    const zonas = INT.map(r => r.zona).filter((v, i, a) => v && a.indexOf(v) === i).sort();
+    if(zonaSel !== "*" && !zonas.includes(zonaSel)) zonaSel = "*";
+    $("sel-zona").innerHTML = '<option value="*">Todas</option>' + zonas.map(z => '<option value="' + esc(z) + '"' + (z === zonaSel ? " selected" : "") + '>' + esc(z) + '</option>').join("");
+    INT.forEach(r => { r.intento_preguntas.sort((a,b) => a.orden - b.orden); r.eventos.sort((a,b) => new Date(a.creado) - new Date(b.creado)); });
+    pintarResultados();
+    $("upd").textContent = "Actualizado " + hora(Date.now());
+    if(detalleId) verDetalle(detalleId);
+  }catch(e){
+    if(e.message !== "SIN_SESION") $("tb").innerHTML = '<tr><td colspan="8" class="empty">No se pudieron cargar los resultados (' + esc(e.message) + ').</td></tr>';
+  }
+  if(primera && !poll) poll = setInterval(() => { if(!document.hidden && !$("v-app").hidden && !$("t-res").hidden) cargarResultados(); }, 30000);
+}
+$("sel-eval").onchange = e => { evalSel = e.target.value; detalleId = null; verLista(); cargarResultados(); };
+$("btn-refresh").onclick = () => cargarResultados();
+$("sel-zona").onchange = e => { zonaSel = e.target.value; pintarResultados(); };
+const visibles = () => zonaSel === "*" ? INT : INT.filter(r => r.zona === zonaSel);
+const anulado = r => r.cierre === "salidas";
+const aprobado = r => !anulado(r) && r.nota >= r.nota_aprobatoria;
+const terminados = () => visibles().filter(r => r.fin);
+const validos = () => terminados().filter(r => !anulado(r));
+function usado(r){ return Math.round((Math.min(new Date(r.fin || Date.now()).getTime(), new Date(r.limite).getTime()) - new Date(r.inicio).getTime()) / 1000); }
+function chipRes(r){
+  if(!r.fin) return '<span class="chip info">En curso</span>';
+  if(anulado(r)) return '<span class="chip bad">Anulado</span>';
+  return '<span class="chip ' + (aprobado(r) ? "ok" : "bad") + '">' + (aprobado(r) ? "Aprobado" : "Desaprobado") + '</span>';
+}
+function estadisticas(lista){
+  const t = {}, q = {};
+  lista.forEach(r => r.intento_preguntas.forEach(x => {
+    t[x.tema] = t[x.tema] || { vez: 0, mal: 0 }; t[x.tema].vez++; if(!x.es_correcta) t[x.tema].mal++;
+    const k = x.texto; q[k] = q[k] || { vez: 0, mal: 0, tema: x.tema, correcta: x.correcta }; q[k].vez++; if(!x.es_correcta) q[k].mal++;
+  }));
+  return { t, q };
+}
+function pintarResultados(){
+  const V = visibles(), T = terminados(), OK = validos();
+  $("st-n").innerHTML = T.length + (V.length > T.length ? ' <small>+ ' + (V.length - T.length) + ' en curso</small>' : '');
+  const nap = T.length ? T[0].nota_aprobatoria : CFG.nota_aprobatoria;
+  $("st-pass-l").textContent = "Aprobados (" + nap + " o más)";
+  $("st-pass").innerHTML = T.filter(aprobado).length + ' <small>de ' + T.length + '</small>';
+  $("st-avg").innerHTML = OK.length ? (OK.reduce((s, r) => s + r.nota, 0) / OK.length).toFixed(1) + ' <small>/ ' + OK[0].total + ' (sin anulados)</small>' : "–";
+  $("st-exit").innerHTML = T.filter(anulado).length + ' <small>técnicos</small>';
+  $("tb").innerHTML = V.length ? V.map(r => {
+    const s = r.salidas;
+    return '<tr><td><b style="font-weight:500">' + esc(r.nombre) + '</b>' + (evalSel === "*" ? '<br><span class="muted" style="font-size:12px">' + esc(r.evaluacion) + '</span>' : '') + '</td>' +
+      '<td class="n muted">' + esc(r.dni) + '</td><td>' + esc(r.zona) + '</td>' +
+      '<td class="n"><b style="font-weight:500' + (anulado(r) ? ';text-decoration:line-through;color:var(--muted)' : '') + '">' + (r.fin ? r.nota + '/' + r.total : '—') + '</b></td><td>' + chipRes(r) + '</td>' +
+      '<td>' + (s ? '<span class="chip bad">' + s + (s === 1 ? ' salida' : ' salidas') + '</span>' : '<span class="muted" style="font-size:13px">Ninguna</span>') + '</td>' +
+      '<td class="n">' + mmss(usado(r)) + '</td>' +
+      '<td class="muted" style="font-size:13px">' + hora(r.inicio) + (r.fin ? ' → ' + hora(r.fin) : '') + '<br><span style="font-size:12px">' + (r.fin ? esc(MOTIVOS[r.cierre] || r.cierre) : 'Respondiendo…') + '</span></td>' +
+      '<td style="text-align:right"><button type="button" class="lnk" data-det="' + r.id + '">Ver detalle</button></td></tr>';
+  }).join("") : '<tr><td colspan="9" class="empty">' + (INT.length ? 'No hay técnicos de esta zona.' : 'Todavía nadie rindió esta evaluación. Comparte el link del examen (pestaña Configuración).') + '</td></tr>';
+  document.querySelectorAll("[data-det]").forEach(b => b.onclick = () => verDetalle(b.dataset.det));
+  const { t, q } = estadisticas(OK);
+  const temas = Object.entries(t).map(([n, v]) => ({ n, p: Math.round(v.mal / v.vez * 100) })).sort((a, b) => b.p - a.p);
+  $("temas").innerHTML = temas.length ? temas.map(x => '<div class="barrow"><div class="t"><span>' + esc(x.n) + '</span><b class="mono" style="font-weight:500">' + x.p + '%</b></div><div class="bar"><span style="width:' + x.p + '%;background:' + (x.p >= 30 ? "var(--high)" : "var(--low)") + '"></span></div></div>').join("") : '<p class="muted">Aún no hay datos.</p>';
+  const top = Object.entries(q).filter(([, v]) => v.mal > 0).sort((a, b) => (b[1].mal / b[1].vez) - (a[1].mal / a[1].vez) || b[1].mal - a[1].mal).slice(0, 3);
+  $("topq").innerHTML = top.length ? top.map(([txt, v]) => '<div class="stack-s" style="gap:2px"><span class="eyebrow" style="font-size:10px">' + esc(v.tema) + '</span><p style="font-size:14px;line-height:1.45">' + esc(txt) + '</p><p class="muted" style="font-size:13px">Correcta: ' + esc(v.correcta) + '</p><p style="font-size:13px;color:var(--high-ink);font-weight:600">Falló ' + v.mal + ' de ' + v.vez + '</p></div>').join("") : '<p class="muted">Aún no hay datos.</p>';
+}
+function verLista(){ $("res-list").hidden = false; $("res-det").hidden = true; detalleId = null; }
+$("btn-back").onclick = () => { verLista(); window.scrollTo(0,0); };
+function verDetalle(id){
+  const r = INT.find(x => x.id === id); if(!r){ verLista(); return; }
+  const nuevo = detalleId !== id; detalleId = id;
+  $("res-list").hidden = true; $("res-det").hidden = false; if(nuevo) window.scrollTo(0,0);
+  $("d-name").textContent = r.nombre; $("d-dni").textContent = r.dni; $("d-zona").textContent = r.zona || "—"; $("d-eval").textContent = r.evaluacion + " · " + fecha(r.inicio);
+  $("d-id").textContent = r.envio || "—"; $("d-cierre").textContent = r.fin ? (MOTIVOS[r.cierre] || r.cierre) : "Todavía está respondiendo";
+  $("d-score").textContent = r.fin ? r.nota : "—"; $("d-score").style.textDecoration = anulado(r) ? "line-through" : ""; $("d-total").textContent = "/ " + r.total; $("d-badge").innerHTML = chipRes(r);
+  $("d-used").textContent = mmss(usado(r)); $("d-of").textContent = "de " + mmss((new Date(r.limite) - new Date(r.inicio)) / 1000);
+  $("d-exits").textContent = r.salidas; $("d-exits").style.color = r.salidas ? "var(--high-ink)" : "";
+  $("d-away").textContent = r.salidas ? r.segundos_fuera + " s fuera de la página" : "No salió de la página";
+  const porTema = {};
+  r.intento_preguntas.forEach(x => { porTema[x.tema] = porTema[x.tema] || []; porTema[x.tema].push(x); });
+  $("d-temas").innerHTML = Object.entries(porTema).map(([t, xs]) => {
+    const ok = r.fin ? xs.filter(x => x.es_correcta).length : 0;
+    return '<div class="barrow"><div class="t"><span>' + esc(t) + '</span><b class="mono" style="font-weight:500">' + (r.fin ? ok + '/' + xs.length : '—') + '</b></div><div class="cells">' + xs.map((x, i) => '<span class="' + (i < ok ? "y" : "") + '"></span>').join("") + '</div></div>';
+  }).join("");
+  const nombres = { inicio: ["Inició el examen", "var(--low)"], salida: ["Salió de la página", "var(--high)"], recarga: ["Recargó la página", "var(--high)"], envio: ["Examen cerrado: " + (MOTIVOS[r.cierre] || ""), "#2E7A4D"] };
+  $("d-events").innerHTML = r.eventos.map(e => {
+    const n = nombres[e.tipo] || [e.tipo, "var(--muted)"];
+    return '<li><span class="tm">' + hora(e.creado) + '</span><span class="d" style="background:' + n[1] + '" aria-hidden="true"></span><span>' + esc(n[0]) + (e.tipo === "salida" && e.segundos ? " durante " + e.segundos + " segundos" : "") + '</span></li>';
+  }).join("");
+  $("d-tb").innerHTML = r.intento_preguntas.map(x => {
+    const dio = x.respuesta === null ? null : x.opciones[x.respuesta];
+    const res = !r.fin ? '<span class="chip gray">En curso</span>' : x.es_correcta ? '<span class="chip ok">Correcta</span>' : '<span class="chip bad">' + (dio === null ? "Sin responder" : "Incorrecta") + '</span>';
+    return '<tr class="' + (r.fin && !x.es_correcta ? "wrong" : "") + '"><td class="n muted">' + x.orden + '</td><td style="max-width:360px"><span class="eyebrow" style="display:block;margin-bottom:2px;font-size:10px">' + esc(x.tema) + '</span>' + esc(x.texto) + '</td>' +
+      '<td>' + (dio === null ? '<span class="muted">Sin responder</span>' : esc(dio)) + '</td><td class="muted">' + esc(x.correcta) + '</td><td>' + res + '</td></tr>';
+  }).join("");
+}
+$("btn-del").onclick = async () => {
+  const r = INT.find(x => x.id === detalleId); if(!r) return;
+  if(!await confirmar("¿Borrar el examen de " + r.nombre + "?", "Se borran sus respuestas y su nota de la evaluación \"" + r.evaluacion + "\". Después podrá rendir de nuevo con su DNI. Esto no se puede deshacer.", "Sí, borrar")) return;
+  try{ await api("DELETE", "intentos?id=eq." + r.id); verLista(); await cargarResultados(); }
+  catch(e){ await confirmar("No se pudo borrar", e.message, "Entendido"); }
+};
+
+/* Excel de resultados */
+$("btn-xls").onclick = () => {
+  const msg = $("xls-msg");
+  if(!window.XLSX){ msg.className = "err"; msg.textContent = "No se pudo cargar el generador de Excel. Revisa tu conexión y recarga la página."; msg.hidden = false; return; }
+  const L = visibles().slice().sort((a, b) => (anulado(a) - anulado(b)) || ((b.nota || 0) - (a.nota || 0)));
+  const res = [["Técnico","DNI","Zona","Evaluación","Nota","Total","%","Resultado","Salidas","Segundos fuera","Tiempo usado","Inicio","Envío","Cierre","N.º de envío"]]
+    .concat(L.map(r => [r.nombre, r.dni, r.zona, r.evaluacion, r.fin ? r.nota : "", r.total, r.fin ? Math.round(r.nota / r.total * 100) + "%" : "", !r.fin ? "En curso" : anulado(r) ? "ANULADO" : (aprobado(r) ? "Aprobado" : "Desaprobado"),
+                        r.salidas, r.segundos_fuera, mmss(usado(r)), fecha(r.inicio), r.fin ? fecha(r.fin) : "", r.fin ? (MOTIVOS[r.cierre] || r.cierre) : "En curso", r.envio || ""]));
+  const det = [["Técnico","DNI","Zona","Evaluación","N.º","Tema","Pregunta","Respuesta del técnico","Respuesta correcta","Resultado"]];
+  L.forEach(r => r.intento_preguntas.forEach(x => {
+    const dio = x.respuesta === null ? "Sin responder" : x.opciones[x.respuesta];
+    det.push([r.nombre, r.dni, r.zona, r.evaluacion, x.orden, x.tema, x.texto, dio, x.correcta, !r.fin ? "En curso" : x.es_correcta ? "Correcta" : (x.respuesta === null ? "Sin responder" : "Incorrecta")]);
+  }));
+  const { t, q } = estadisticas(validos());
+  const tem = [["Tema","Respuestas","Incorrectas","% de error"]].concat(Object.entries(t).map(([n, v]) => [n, v.vez, v.mal, Math.round(v.mal / v.vez * 100) + "%"]));
+  const fal = [["Tema","Pregunta","Respuesta correcta","Veces que salió","Veces fallada","% de fallo"]].concat(
+    Object.entries(q).sort((a, b) => (b[1].mal / b[1].vez) - (a[1].mal / a[1].vez)).map(([txt, v]) => [v.tema, txt, v.correcta, v.vez, v.mal, Math.round(v.mal / v.vez * 100) + "%"]));
+  const wb = XLSX.utils.book_new();
+  [["Resultados", res, [28,11,16,16,6,6,6,13,8,14,12,18,18,28,15]], ["Detalle por pregunta", det, [28,11,16,16,5,24,70,55,55,14]], ["Por tema", tem, [32,12,12,10]], ["Preguntas falladas", fal, [24,70,55,14,14,10]]]
+    .forEach(([n, rows, w]) => { const ws = XLSX.utils.aoa_to_sheet(rows); ws["!cols"] = w.map(x => ({ wch: x })); XLSX.utils.book_append_sheet(wb, ws, n); });
+  const nombre = "Resultados " + (evalSel === "*" ? "todas las evaluaciones" : evalSel) + (zonaSel === "*" ? "" : " - " + zonaSel);
+  const nombreArch = nombre.replace(/[\\/:*?"<>|]/g, "-") + ".xlsx";
+  XLSX.writeFile(wb, nombreArch);
+  msg.className = "okmsg"; msg.textContent = "Excel descargado: " + nombreArch; msg.hidden = false;
+};
+
+/* ================= Banco de preguntas ================= */
+async function cargarBanco(){
+  $("bank").innerHTML = '<p class="muted">Cargando…</p>';
+  try{ BANCO = await api("GET", "preguntas?select=*&order=tema.asc,id.asc"); }
+  catch(e){ if(e.message !== "SIN_SESION") $("bank").innerHTML = '<p class="err">No se pudo cargar el banco (' + esc(e.message) + ').</p>'; return; }
+  pintarBanco();
+}
+function pintarBanco(){
+  const temas = {}; BANCO.forEach(p => { (temas[p.tema] = temas[p.tema] || []).push(p); });
+  const act = BANCO.filter(p => p.activa).length;
+  $("bank-sum").textContent = BANCO.length + " preguntas (" + act + " activas) en " + Object.keys(temas).length + " temas. Cada técnico recibe " + (totalPorExamen(CFG.por_tema) || 0) + " (" + CFG.por_tema + " por tema).";
+  $("dl-temas").innerHTML = Object.keys(temas).map(t => '<option value="' + esc(t) + '"></option>').join("");
+  $("bank").innerHTML = Object.keys(temas).length ? Object.entries(temas).map(([t, ps]) => {
+    const a = ps.filter(p => p.activa).length;
+    return '<section class="card"><h2 style="font-size:20px;margin-bottom:4px">' + esc(t) + ' <span class="muted" style="font-size:14px;font-family:var(--f-body);font-weight:400">· ' + a + ' activas de ' + ps.length + (a < CFG.por_tema ? ' · <span style="color:var(--high-ink)">menos de ' + CFG.por_tema + ', saldrán todas</span>' : '') + '</span></h2>' +
+      ps.map(p => '<div class="bq' + (p.activa ? '' : ' off') + '"><div class="txt"><span>' + esc(p.texto) + '</span><span style="color:var(--ok);font-weight:500;font-size:14px">✓ ' + esc(p.correcta) + '</span><span class="muted" style="font-size:13px">' + [p.incorrecta1, p.incorrecta2, p.incorrecta3].map(esc).join(" · ") + '</span></div>' +
+        '<div class="row" style="gap:14px">' + (p.activa ? '' : '<span class="chip gray">Desactivada</span>') +
+        '<button type="button" class="lnk" data-ed="' + p.id + '">Editar</button><button type="button" class="lnk" data-tg="' + p.id + '">' + (p.activa ? "Desactivar" : "Activar") + '</button><button type="button" class="lnk red" data-rm="' + p.id + '">Eliminar</button></div></div>').join("") + '</section>';
+  }).join("") : '<div class="card empty">El banco está vacío. Agrega preguntas o impórtalas desde Excel.</div>';
+  document.querySelectorAll("[data-ed]").forEach(b => b.onclick = () => abrirPregunta(BANCO.find(p => p.id == b.dataset.ed)));
+  document.querySelectorAll("[data-tg]").forEach(b => b.onclick = async () => { const p = BANCO.find(x => x.id == b.dataset.tg); try{ await api("PATCH", "preguntas?id=eq." + p.id, { activa: !p.activa }); p.activa = !p.activa; pintarBanco(); }catch(e){} });
+  document.querySelectorAll("[data-rm]").forEach(b => b.onclick = async () => {
+    const p = BANCO.find(x => x.id == b.dataset.rm);
+    if(!await confirmar("¿Eliminar esta pregunta?", "\"" + p.texto + "\". Los resultados anteriores la conservan. Si solo quieres que no salga más, mejor desactívala.", "Eliminar")) return;
+    try{ await api("DELETE", "preguntas?id=eq." + p.id); BANCO = BANCO.filter(x => x.id !== p.id); pintarBanco(); }catch(e){ await confirmar("No se pudo eliminar", e.message, "Entendido"); }
+  });
+}
+let editando = null;
+function abrirPregunta(p){
+  editando = p || null;
+  $("q-title").textContent = p ? "Editar pregunta" : "Agregar pregunta";
+  $("q-tema").value = p ? p.tema : ""; $("q-texto").value = p ? p.texto : ""; $("q-ok").value = p ? p.correcta : "";
+  $("q-b1").value = p ? p.incorrecta1 : ""; $("q-b2").value = p ? p.incorrecta2 : ""; $("q-b3").value = p ? p.incorrecta3 : "";
+  $("q-act").checked = p ? p.activa : true; $("q-err").hidden = true;
+  $("l-q").hidden = false; $("q-tema").focus();
+}
+$("btn-new").onclick = () => abrirPregunta(null);
+$("q-cancel").onclick = () => $("l-q").hidden = true;
+$("f-q").addEventListener("submit", async e => {
+  e.preventDefault();
+  const body = { tema: $("q-tema").value.trim(), texto: $("q-texto").value.trim(), correcta: $("q-ok").value.trim(),
+                 incorrecta1: $("q-b1").value.trim(), incorrecta2: $("q-b2").value.trim(), incorrecta3: $("q-b3").value.trim(), activa: $("q-act").checked };
+  const err = $("q-err");
+  if(Object.entries(body).some(([k, v]) => k !== "activa" && !v)){ err.textContent = "Completa todos los campos."; err.hidden = false; return; }
+  const ops = [body.correcta, body.incorrecta1, body.incorrecta2, body.incorrecta3].map(s => s.toLowerCase());
+  if(new Set(ops).size < 4){ err.textContent = "Las cuatro opciones deben ser distintas."; err.hidden = false; return; }
+  try{
+    if(editando) await api("PATCH", "preguntas?id=eq." + editando.id, body); else await api("POST", "preguntas", body, "return=minimal");
+    $("l-q").hidden = true; await cargarBanco();
+  }catch(x){ err.textContent = "No se pudo guardar: " + x.message; err.hidden = false; }
+});
+
+/* Excel del banco (sirve de plantilla) */
+const CAB = ["Tema","Pregunta","Correcta","Incorrecta 1","Incorrecta 2","Incorrecta 3","Activa"];
+$("btn-tpl").onclick = async () => {
+  if(!window.XLSX) return;
+  if(!BANCO) await cargarBanco();
+  const rows = [CAB].concat((BANCO || []).map(p => [p.tema, p.texto, p.correcta, p.incorrecta1, p.incorrecta2, p.incorrecta3, p.activa ? "Sí" : "No"]));
+  if(rows.length === 1) rows.push(["Electricidad y controles", "¿Con qué instrumento se mide la corriente sin abrir el circuito?", "Pinza amperimétrica", "Manómetro", "Vacuómetro", "Termómetro", "Sí"]);
+  const ws = XLSX.utils.aoa_to_sheet(rows); ws["!cols"] = [26,70,45,45,45,45,8].map(w => ({ wch: w }));
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Preguntas");
+  XLSX.writeFile(wb, "Banco de preguntas.xlsx");
+};
+
+/* Importar */
+let IMP = [];
+const norm = s => String(s == null ? "" : s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+$("btn-imp").onclick = () => { IMP = []; $("i-file").value = ""; $("i-prev").innerHTML = ""; $("i-err").hidden = true; $("i-ok").hidden = true; $("i-go").disabled = true; $("l-imp").hidden = false; };
+$("i-cancel").onclick = () => $("l-imp").hidden = true;
+$("i-file").onchange = async e => {
+  const f = e.target.files[0]; IMP = []; $("i-go").disabled = true; $("i-err").hidden = true; $("i-ok").hidden = true; $("i-prev").innerHTML = "";
+  if(!f) return;
+  if(!window.XLSX){ $("i-err").textContent = "No se pudo cargar el lector de Excel. Revisa tu conexión."; $("i-err").hidden = false; return; }
+  try{
+    const wb = XLSX.read(await f.arrayBuffer(), { type: "array" });
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" });
+    const hi = rows.findIndex(r => r.map(norm).includes("tema") && r.map(norm).some(c => c === "pregunta" || c === "texto"));
+    if(hi < 0) throw new Error("No encontré la fila de títulos. La primera fila debe decir Tema, Pregunta, Correcta, Incorrecta 1, Incorrecta 2, Incorrecta 3.");
+    const h = rows[hi].map(norm), col = names => h.findIndex(c => names.includes(c));
+    const ix = { tema: col(["tema"]), texto: col(["pregunta","texto"]), ok: col(["correcta","respuesta correcta"]),
+                 b1: col(["incorrecta 1","incorrecta1"]), b2: col(["incorrecta 2","incorrecta2"]), b3: col(["incorrecta 3","incorrecta3"]), act: col(["activa"]) };
+    const faltan = Object.entries({ Tema: ix.tema, Pregunta: ix.texto, Correcta: ix.ok, "Incorrecta 1": ix.b1, "Incorrecta 2": ix.b2, "Incorrecta 3": ix.b3 }).filter(([, v]) => v < 0).map(([k]) => k);
+    if(faltan.length) throw new Error("Faltan estas columnas: " + faltan.join(", ") + ".");
+    const malas = [];
+    rows.slice(hi + 1).forEach((r, k) => {
+      const v = i => String(r[i] == null ? "" : r[i]).trim();
+      const p = { tema: v(ix.tema), texto: v(ix.texto), correcta: v(ix.ok), incorrecta1: v(ix.b1), incorrecta2: v(ix.b2), incorrecta3: v(ix.b3),
+                  activa: ix.act < 0 ? true : !["no","0","false","inactiva"].includes(norm(r[ix.act])) };
+      const fila = hi + k + 2;
+      if(!p.tema && !p.texto && !p.correcta) return;
+      if(!p.tema || !p.texto || !p.correcta || !p.incorrecta1 || !p.incorrecta2 || !p.incorrecta3) malas.push("fila " + fila + " (falta un dato)");
+      else if(new Set([p.correcta, p.incorrecta1, p.incorrecta2, p.incorrecta3].map(norm)).size < 4) malas.push("fila " + fila + " (opciones repetidas)");
+      else IMP.push(p);
+    });
+    const temas = {}; IMP.forEach(p => temas[p.tema] = (temas[p.tema] || 0) + 1);
+    $("i-prev").innerHTML = '<p><b>' + IMP.length + ' preguntas listas</b> en ' + Object.keys(temas).length + ' temas: ' + Object.entries(temas).map(([t, n]) => esc(t) + ' (' + n + ')').join(", ") + '.</p>' +
+      (malas.length ? '<p class="err">Se omitirán ' + malas.length + ' filas: ' + esc(malas.slice(0, 8).join(", ")) + (malas.length > 8 ? "…" : "") + '</p>' : '');
+    $("i-go").disabled = !IMP.length; $("i-go").textContent = "Importar " + IMP.length + " preguntas";
+  }catch(x){ $("i-err").textContent = x.message; $("i-err").hidden = false; }
+};
+$("i-go").onclick = async () => {
+  const b = $("i-go"); b.disabled = true; b.textContent = "Importando…";
+  try{
+    if($("i-off").checked) await api("PATCH", "preguntas?activa=eq.true", { activa: false });
+    for(let i = 0; i < IMP.length; i += 200) await api("POST", "preguntas", IMP.slice(i, i + 200), "return=minimal");
+    $("i-ok").textContent = "Listo: se importaron " + IMP.length + " preguntas."; $("i-ok").hidden = false; IMP = [];
+    b.textContent = "Importado";
+    await cargarBanco();
+  }catch(x){ $("i-err").textContent = "No se pudo importar: " + x.message; $("i-err").hidden = false; b.disabled = false; b.textContent = "Reintentar"; }
+};
+
+/* ================= Arranque ================= */
+(async function(){
+  if(!URL_BASE || URL_BASE.includes("TU-PROYECTO") || !KEY || KEY.includes("PEGA-AQUI")){ mensaje("Falta configurar la conexión", "Edita el archivo config.js con la dirección y la clave de tu proyecto de Supabase."); $("btn-msg-out").hidden = true; return; }
+  S = leerSesion();
+  if(!S){ mostrarLogin(); return; }
+  try{ await entrar(); }catch(e){ if(e.message !== "SIN_SESION") mostrarLogin("No se pudo conectar (" + e.message + ")."); }
+})();
+})();
+</script>
+</body>
+</html>
