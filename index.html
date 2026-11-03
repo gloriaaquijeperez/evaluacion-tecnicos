@@ -212,7 +212,7 @@ body{overflow-x:clip}
   <div class="aviso" role="note">
     <div class="aviso-h"><span class="aviso-i" aria-hidden="true">!</span>Antes de empezar</div>
     <ul>
-      <li><span aria-hidden="true">📵</span>No salgas de la página ni cambies de app</li>
+      <li><span aria-hidden="true">📵</span>No salgas de la página, no cambies de app ni uses dos pantallas</li>
       <li><span aria-hidden="true">🔒</span>No recargues ni bloquees la pantalla</li>
       <li id="al-regla" class="fuerte"><span aria-hidden="true">⛔</span>Si lo haces, el examen se anula</li>
     </ul>
@@ -330,6 +330,14 @@ body{overflow-x:clip}
     <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" style="flex:1" type="button" id="btn-ru-no">Todavía no</button><button class="btn danger" style="flex:1" type="button" id="btn-ru-yes">Entiendo, comenzar</button></div>
   </div>
 </div>
+<!-- Tapa el examen mientras el técnico está fuera (otra ventana, pantalla dividida, etc.) -->
+<div class="layer" id="l-fuera" hidden role="alertdialog" aria-modal="true" aria-labelledby="f-title" style="background:#090A1E;z-index:30">
+  <div class="box alert">
+    <h2 id="f-title" style="font-size:24px">Saliste del examen</h2>
+    <p id="f-text"></p>
+    <p class="muted" style="font-size:14px" id="f-sub"></p>
+  </div>
+</div>
 <div class="layer" id="l-other" hidden role="dialog" aria-modal="true" aria-labelledby="o-title">
   <div class="box">
     <h2 id="o-title" style="font-size:24px">¿Otro técnico va a rendir?</h2>
@@ -355,6 +363,8 @@ const ERRORES = {
   YA_RINDIO: "Este DNI ya rindió esta evaluación. Si es un error, avisa a el evaluador.",
   EN_CURSO: "Este DNI tiene un examen en curso en otro celular. Avisa a el evaluador.",
   ZONA_INVALIDA: "Selecciona tu zona.",
+  VENTANA: "Maximiza la ventana del navegador y no uses pantalla dividida antes de comenzar.",
+  DOS_PANTALLAS: "Desconecta la segunda pantalla (monitor) antes de comenzar. Solo se permite una pantalla.",
   SIN_PREGUNTAS: "El examen todavía no tiene preguntas cargadas. Avisa a el evaluador.",
   RED: "No hay conexión a internet. Revisa tu señal e intenta de nuevo."
 };
@@ -388,7 +398,7 @@ const borrarLocal = () => { try{ localStorage.removeItem(LS); }catch(e){} };
 
 /* ---------- utilidades ---------- */
 const VIEWS = ["v-load","v-msg","v-start","v-exam","v-sent"];
-function show(id){ VIEWS.forEach(v => $(v).hidden = v !== id); ["l-warn","l-submit","l-other","l-rules"].forEach(l => $(l).hidden = true); window.scrollTo(0,0); }
+function show(id){ VIEWS.forEach(v => $(v).hidden = v !== id); ["l-warn","l-submit","l-other","l-rules","l-fuera"].forEach(l => $(l).hidden = true); window.scrollTo(0,0); }
 function mmss(s){ s = Math.max(0, Math.ceil(s)); return String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0"); }
 function fecha(ts){ try{ return new Date(ts).toLocaleString("es-PE",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}); }catch(e){ return String(ts); } }
 function mensaje(titulo, texto, reintentar){ $("msg-title").textContent = titulo; $("msg-text").textContent = texto; $("btn-retry").hidden = !reintentar; show("v-msg"); }
@@ -444,6 +454,8 @@ $("f-start").addEventListener("submit", async e => {
   if(!/^\d{8}$/.test(dni)) return fallo(ERRORES.DNI_INVALIDO);
   if(zona.length < 2) return fallo("Selecciona tu zona.");
   if(!$("in-acepto").checked) return fallo("Marca la casilla para confirmar que leíste las reglas.");
+  if(ventanaChica()) return fallo(ERRORES.VENTANA);
+  if(dosPantallas()) return fallo(ERRORES.DOS_PANTALLAS);
   err.hidden = true;
   DATOS = { nombre, dni, zona };
   $("ru-err").hidden = true;
@@ -452,6 +464,7 @@ $("f-start").addEventListener("submit", async e => {
 $("btn-ru-no").onclick = () => $("l-rules").hidden = true;
 $("btn-ru-yes").onclick = async () => {
   if(!DATOS) return;
+  if(ventanaChica() || dosPantallas()){ $("ru-err").textContent = dosPantallas() ? ERRORES.DOS_PANTALLAS : ERRORES.VENTANA; $("ru-err").hidden = false; return; }
   const b = $("btn-ru-yes"), er = $("ru-err"); b.disabled = true; b.textContent = "Preparando tu examen…"; er.hidden = true;
   try{
     const p = await rpc("iniciar_examen", { p_nombre: DATOS.nombre, p_dni: DATOS.dni, p_zona: DATOS.zona });
@@ -482,6 +495,7 @@ function abrirExamen(){
   pintarSalidas(); estado("ok"); renderQ();
   if(timer) clearInterval(timer); tick(); timer = setInterval(tick, 250);
   pedirPantallaEncendida();
+  graciaHasta = Date.now() + 1500;   // margen para el paso a pantalla completa
 }
 async function pedirPantallaEncendida(){
   try{ if("wakeLock" in navigator){ wakeLock = await navigator.wakeLock.request("screen"); } }catch(e){}
@@ -620,12 +634,52 @@ function avisar(recarga){
   $("l-warn").hidden = false;
 }
 $("btn-warn-ok").onclick = () => { $("l-warn").hidden = true; pedirPantallaEncendida(); };
-document.addEventListener("visibilitychange", async () => {
+/* Reglas de salida:
+   - ANULA (se registra): ocultar la página (otra pestaña/app, minimizar, bloquear), dividir la pantalla
+     o achicar la ventana, y tener una segunda pantalla conectada.
+   - Solo TAPA las preguntas (no anula): la ventana pierde el foco pero sigue visible y maximizada,
+     por ejemplo al tocar la barra de direcciones, la barra de tareas o la búsqueda de Windows. */
+function ventanaChica(){
+  if(matchMedia("(pointer:coarse)").matches){            // celular/tablet: área visible vs. pantalla completa
+    return innerWidth * innerHeight < screen.width * screen.height * 0.6;
+  }
+  const W = screen.availWidth || screen.width, H = screen.availHeight || screen.height;
+  return (outerWidth || innerWidth) < W * 0.85 || (outerHeight || innerHeight) < H * 0.8;
+}
+const dosPantallas = () => screen.isExtended === true;   // Chrome/Edge: hay más de un monitor conectado
+let fuera = false, tapado = false, graciaHasta = 0;
+const enExamen = () => E && !E.enviando && !$("v-exam").hidden;
+function tapar(anula){
+  $("f-title").textContent = anula ? "Saliste del examen" : "Examen en pausa";
+  $("f-text").innerHTML = anula ? "Se detectó que cambiaste de app, dividiste la pantalla o usas otra pantalla. <b>Quedó registrado en el sistema.</b>"
+                                : "Las preguntas se ocultan mientras no estés en esta ventana.";
+  $("f-sub").textContent = anula ? "Vuelve a esta ventana y maximízala." : "Haz clic o toca aquí para continuar.";
+  $("l-fuera").hidden = false;
+}
+function salir(){
+  if(!enExamen() || fuera) return;
+  fuera = true; ocultoDesde = Date.now();
+  tapar(true);
+  salidaPendiente = rpc("registrar_salida", { p_id: E.id, p_token: E.token, p_tipo: "salida" }, { keepalive: true }).catch(() => null);
+}
+function revisarFoco(){
+  if(!enExamen() || Date.now() < graciaHasta) return;
+  if(document.hidden || ventanaChica() || dosPantallas()) return salir();
+  if(fuera) return volver();
+  if(!document.hasFocus()){ if(!tapado){ tapado = true; tapar(false); } }
+  else if(tapado){ tapado = false; $("l-fuera").hidden = true; }
+}
+document.addEventListener("visibilitychange", () => { if(document.hidden) salir(); else revisarFoco(); });
+window.addEventListener("blur", revisarFoco);
+window.addEventListener("focus", revisarFoco);
+window.addEventListener("resize", revisarFoco);
+setInterval(revisarFoco, 1000);   // por si el navegador no avisa del cambio de foco o de tamaño
+async function volver(){
+  if(!fuera) return;
+  if(!document.hasFocus()) return;   // sigue fuera de la ventana
+  fuera = false; tapado = false; $("l-fuera").hidden = true;
   if(!E || E.enviando || $("v-exam").hidden) return;
-  if(document.hidden){
-    ocultoDesde = Date.now();
-    salidaPendiente = rpc("registrar_salida", { p_id: E.id, p_token: E.token, p_tipo: "salida" }, { keepalive: true }).catch(() => null);
-  } else if(ocultoDesde){
+  if(ocultoDesde){
     const seg = Math.round((Date.now() - ocultoDesde) / 1000); ocultoDesde = null;
     const s = await salidaPendiente; salidaPendiente = null;
     if(!E) return;
@@ -638,7 +692,7 @@ document.addEventListener("visibilitychange", async () => {
     tick();
     if(E && !E.enviando) avisar(false);
   }
-});
+}
 
 arrancar();
 })();
