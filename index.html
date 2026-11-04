@@ -471,13 +471,15 @@ $("btn-ru-yes").onclick = async () => {
   if(!DATOS) return;
   if(ventanaChica() || dosPantallas() || panelAbierto()){ $("ru-err").textContent = dosPantallas() ? ERRORES.DOS_PANTALLAS : panelAbierto() ? ERRORES.PANEL : ERRORES.VENTANA; $("ru-err").hidden = false; return; }
   const b = $("btn-ru-yes"), er = $("ru-err"); b.disabled = true; b.textContent = "Preparando tu examen…"; er.hidden = true;
+  // La pantalla completa se pide en el mismo clic: el navegador solo la permite como respuesta directa al toque
+  try{ if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{}); }catch(x){}
   try{
     const p = await rpc("iniciar_examen", { p_nombre: DATOS.nombre, p_dni: DATOS.dni, p_zona: DATOS.zona });
     guardarLocal({ id: p.id, token: p.token, nombre: p.nombre, dni: p.dni, zona: p.zona });
     cargarExamen(p);
-    try{ if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{}); }catch(x){}
     abrirExamen();
   }catch(x){
+    try{ if(document.fullscreenElement) document.exitFullscreen().catch(()=>{}); }catch(e){}
     er.textContent = ERRORES[x.message] || (x.red ? ERRORES.RED : "No se pudo iniciar el examen (" + x.message + ").");
     er.hidden = false;
   }finally{ b.disabled = false; b.textContent = "Entiendo, comenzar"; }
