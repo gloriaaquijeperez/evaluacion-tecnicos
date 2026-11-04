@@ -362,7 +362,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);b
         <div class="bk-banco-est" id="bk-banco-est"></div>
         <button class="btn ghost" type="button" id="btn-nuevo-banco">+ Nuevo banco</button>
       </div>
-      <p class="note">Cada evaluación usa un banco (se elige en <b>Configuración</b>). Los bancos no se borran: quedan guardados para volver a usarlos o copiarlos. Las preguntas <b>desactivadas</b> no salen en los exámenes nuevos.</p>
+      <p class="note">Cada evaluación usa un banco (se elige en <b>Configuración</b>). Los bancos quedan guardados para volver a usarlos o copiarlos; solo se pueden eliminar los que no están en uso. Las preguntas <b>desactivadas</b> no salen en los exámenes nuevos.</p>
       <div class="bk-temas" id="bank-temas" role="group" aria-label="Filtrar por tema"></div>
       <div class="bk-tools">
         <label class="bk-search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="search" id="bank-q" placeholder="Buscar en preguntas o respuestas…" aria-label="Buscar pregunta"></label>
@@ -584,8 +584,24 @@ function pintarBancos(){
   $("c-banco").innerHTML = ops(CFG.banco_id);
   $("bk-banco-est").innerHTML = bancoSel === CFG.banco_id
     ? '<span class="chip ok">✓ En uso en la evaluación actual</span>'
-    : '<span class="chip gray">No está en uso</span> <button class="lnk" type="button" id="btn-usar-banco">Usar en la evaluación actual</button>';
+    : '<span class="chip gray">No está en uso</span> <button class="lnk" type="button" id="btn-usar-banco">Usar en la evaluación actual</button>' +
+      (BANCOS.length > 1 ? ' <button class="lnk red" type="button" id="btn-borrar-banco">Eliminar banco</button>' : '');
   const u = $("btn-usar-banco"); if(u) u.onclick = usarBanco;
+  const d = $("btn-borrar-banco"); if(d) d.onclick = eliminarBanco;
+}
+async function eliminarBanco(){
+  const b = BANCOS.find(x => x.id === bancoSel); if(!b) return;
+  if(!await confirmar("¿Eliminar el banco " + b.nombre + "?", "Se eliminarán sus " + b.n + " preguntas. Los exámenes ya rendidos no se pierden: guardan su propia copia de las preguntas. Esto no se puede deshacer.", "Sí, eliminar banco")) return;
+  try{
+    await rpc("admin_eliminar_banco", { p_id: b.id });
+    bancoSel = CFG.banco_id; temaSel = "*"; await cargarBancos(); await cargarBanco();
+  }catch(e){
+    const m = /BANCO_EN_USO/.test(e.message) ? "Este banco está en uso en la evaluación actual. Primero elige otro banco en Configuración."
+            : /ULTIMO_BANCO/.test(e.message) ? "No se puede eliminar el único banco que queda."
+            : /admin_eliminar_banco|function|404/i.test(e.message) ? "Falta activar esta opción en Supabase (archivo 6_eliminar_banco.sql)."
+            : e.message;
+    await confirmar("No se pudo eliminar el banco", m, "Entendido");
+  }
 }
 async function usarBanco(){
   const nb = nombreBanco(bancoSel);
