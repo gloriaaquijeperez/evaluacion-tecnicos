@@ -178,7 +178,10 @@ body{overflow-x:clip}
 .hero::after{display:none}
 .hero-in{position:relative;z-index:1;width:100%;max-width:560px;margin:0 auto;padding:0 max(18px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:6px}
 .hero + .rules{margin-top:-70px;position:relative;z-index:2}
-@media (min-width:700px){.hero{padding:40px 0 120px}.hero-in{max-width:660px}.hero h1{font-size:34px}}</style>
+@media (min-width:700px){.hero{padding:40px 0 120px}.hero-in{max-width:660px}.hero h1{font-size:34px}}/* Marca de agua del examen y bloqueo de impresión */
+.marca{position:fixed;inset:0;z-index:3;pointer-events:none;background-repeat:repeat}
+@media print{body{display:none!important}}
+</style>
 </head>
 <body>
 
@@ -213,7 +216,7 @@ body{overflow-x:clip}
     <div class="aviso-h"><span class="aviso-i" aria-hidden="true">!</span>Antes de empezar</div>
     <ul>
       <li><span aria-hidden="true">📵</span>No salgas de la página ni cambies de app, y no abras paneles laterales (Copilot, ChatGPT) ni uses dos pantallas</li>
-      <li><span aria-hidden="true">🔒</span>No recargues ni bloquees la pantalla</li>
+      <li><span aria-hidden="true">🔒</span>No recargues, no bloquees la pantalla ni tomes capturas</li>
       <li id="al-regla" class="fuerte"><span aria-hidden="true">⛔</span>Si lo haces, el examen se anula</li>
     </ul>
   </div>
@@ -245,6 +248,7 @@ body{overflow-x:clip}
 
 <!-- Examen -->
 <section id="v-exam" hidden>
+  <div id="marca" class="marca" aria-hidden="true" hidden></div>
   <header class="top">
     <div class="in">
       <div class="stack-s" style="gap:1px;min-width:0">
@@ -491,13 +495,21 @@ function cargarExamen(p){
 function ahora(){ return Date.now() + (E ? E.offset : 0); }
 
 /* ---------- examen ---------- */
-function abrirExamen(){
+/* Marca de agua con el nombre y DNI del técnico sobre las preguntas: si circula una foto, se sabe de quién es */
+function ponerMarcaDeAgua(){
+  const limpio = s => String(s || "").replace(/[<>&"']/g, "");
+  const txt = limpio(E.nombre) + " · DNI " + limpio(E.dni);
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="340" height="190"><text x="170" y="95" text-anchor="middle" transform="rotate(-24 170 95)" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="600" fill="#10285F" fill-opacity="0.09">' + txt + '</text></svg>';
+  $("marca").style.backgroundImage = 'url("data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg) + '")';
+  $("marca").hidden = false;
+}function abrirExamen(){
   $("ex-who").textContent = E.nombre;
   show("v-exam");
   pintarSalidas(); estado("ok"); renderQ();
   if(timer) clearInterval(timer); tick(); timer = setInterval(tick, 250);
   pedirPantallaEncendida();
   graciaHasta = Date.now() + 1500;   // margen para el paso a pantalla completa
+  ponerMarcaDeAgua();
   setTimeout(() => { proporcionBase = proporcion(); }, 1200);   // medida de referencia ya en pantalla completa
 }
 async function pedirPantallaEncendida(){
@@ -676,18 +688,37 @@ function salir(){
   tapar(true);
   salidaPendiente = rpc("registrar_salida", { p_id: E.id, p_token: E.token, p_tipo: "salida" }, { keepalive: true }).catch(() => null);
 }
+const PAUSA_MAX = 5;   // segundos fuera de foco permitidos (clic en la barra de tareas, etc.); más tiempo anula
+let tapadoDesde = 0;
 function revisarFoco(){
   if(!enExamen() || Date.now() < graciaHasta) return;
   if(document.hidden || ventanaChica() || dosPantallas() || panelAbierto()) return salir();
   if(fuera) return volver();
-  if(!document.hasFocus()){ if(!tapado){ tapado = true; tapar(false); } }
+  if(!document.hasFocus()){
+    if(!tapado){ tapado = true; tapadoDesde = Date.now(); tapar(false); }
+    const quedan = PAUSA_MAX - Math.floor((Date.now() - tapadoDesde) / 1000);
+    if(quedan <= 0){ tapado = false; return salir(); }
+    $("f-sub").innerHTML = "Haz clic aquí para continuar. <b>Si no vuelves en " + quedan + " s, el examen se anulará.</b>";
+  }
   else if(tapado){ tapado = false; $("l-fuera").hidden = true; }
 }
 document.addEventListener("visibilitychange", () => { if(document.hidden) salir(); else revisarFoco(); });
 window.addEventListener("blur", revisarFoco);
 window.addEventListener("focus", revisarFoco);
 window.addEventListener("resize", revisarFoco);
-setInterval(revisarFoco, 1000);   // por si el navegador no avisa del cambio de foco o de tamaño
+setInterval(revisarFoco, 500);   // también lleva la cuenta regresiva de la pausa
+/* 3) Impr Pant (Print Screen) anula; 2) sin copiar, cortar, clic derecho, imprimir ni ver código */
+function teclaProhibida(e){
+  if(!enExamen()) return;
+  if(e.key === "PrintScreen" || e.code === "PrintScreen"){ e.preventDefault(); try{ navigator.clipboard.writeText(""); }catch(x){} salir(); return; }
+  const k = (e.key || "").toLowerCase();
+  if((e.ctrlKey || e.metaKey) && ["c","x","a","p","s","u"].includes(k)){ e.preventDefault(); }
+  if(e.key === "F12"){ e.preventDefault(); }
+}
+document.addEventListener("keydown", teclaProhibida, true);
+document.addEventListener("keyup", teclaProhibida, true);
+["copy","cut","contextmenu","selectstart","dragstart"].forEach(ev => document.addEventListener(ev, e => { if(enExamen()) e.preventDefault(); }, true));
+window.addEventListener("beforeprint", () => { if(enExamen()) salir(); });
 async function volver(){
   if(!fuera) return;
   if(!document.hasFocus()) return;   // sigue fuera de la ventana
