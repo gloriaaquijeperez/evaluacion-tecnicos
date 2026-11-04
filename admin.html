@@ -171,6 +171,9 @@ input[type=text],input[type=email],input[type=password],input[type=number],selec
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px rgba(59,170,238,.18);background:#fff}
 .tabs button[aria-selected="true"]{color:var(--low)}
 .box{border-radius:18px}
+/* Selector de banco */
+.bk-banco{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 16px;padding:16px 18px;border-left:5px solid var(--low)}
+.bk-banco-est{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:10px}
 /* ===== Celular y tablet ===== */
 @media (max-width:900px){
   .top .in{padding-top:10px;padding-bottom:10px;gap:8px}
@@ -343,7 +346,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);b
           <button class="btn" type="button" id="btn-new">Agregar pregunta</button>
         </div>
       </div>
-      <p class="note">Las preguntas <b>desactivadas</b> no salen en los exámenes nuevos, pero se conservan en los resultados anteriores. Para reemplazar todo el banco, descarga el Excel, edítalo e impórtalo marcando "desactivar las actuales".</p>
+      <div class="bk-banco card" id="bk-banco" hidden>
+        <label class="f" for="sel-banco" style="flex:1 1 260px">Banco de preguntas<select id="sel-banco"></select></label>
+        <div class="bk-banco-est" id="bk-banco-est"></div>
+        <button class="btn ghost" type="button" id="btn-nuevo-banco">+ Nuevo banco</button>
+      </div>
+      <p class="note">Cada evaluación usa un banco (se elige en <b>Configuración</b>). Los bancos no se borran: quedan guardados para volver a usarlos o copiarlos. Las preguntas <b>desactivadas</b> no salen en los exámenes nuevos.</p>
       <div class="bk-temas" id="bank-temas" role="group" aria-label="Filtrar por tema"></div>
       <div class="bk-tools">
         <label class="bk-search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="search" id="bank-q" placeholder="Buscar en preguntas o respuestas…" aria-label="Buscar pregunta"></label>
@@ -361,6 +369,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);b
           <div class="grid2">
             <label class="f" for="c-titulo" hidden>Título del examen<input type="text" id="c-titulo" maxlength="80"></label>
             <label class="f" for="c-eval">Nombre de la evaluación actual<input type="text" id="c-eval" maxlength="60"><small>Para el examen del próximo mes cámbialo (ej. "Diciembre 2026"). Así cada técnico puede rendir una vez por evaluación.</small></label>
+            <label class="f" for="c-banco" id="c-banco-l" hidden>Banco de preguntas de esta evaluación<select id="c-banco"></select><small>Las preguntas del examen saldrán de este banco.</small></label>
             <label class="f" for="c-tema">Preguntas por tema<input type="number" id="c-tema" min="1" max="50"><small id="c-total"></small></label>
             <label class="f" for="c-min">Minutos<input type="number" id="c-min" min="1" max="240"></label>
             <label class="f" for="c-sal">Salidas para anular el examen<input type="number" id="c-sal" min="1" max="50"><small>Con 1 (recomendado), el examen se anula a la primera salida de la página.</small></label>
@@ -410,6 +419,17 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);b
   </form>
 </div>
 
+<!-- Diálogo nuevo banco -->
+<div class="layer" id="l-banco" hidden role="dialog" aria-modal="true" aria-labelledby="nb-title">
+  <form class="box" id="f-banco" novalidate style="max-width:480px">
+    <h2 style="font-size:22px" id="nb-title">Nuevo banco de preguntas</h2>
+    <label class="f" for="nb-nombre">Nombre del banco<input type="text" id="nb-nombre" maxlength="80" placeholder="Ej. Banco Diciembre 2026"></label>
+    <label class="f" for="nb-origen">¿Cómo empezar?<select id="nb-origen"></select><small>Copiar otro banco no lo modifica: se crea una copia aparte que puedes editar.</small></label>
+    <p class="err" id="nb-err" hidden></p>
+    <div class="row" style="justify-content:flex-end"><button class="btn ghost" type="button" id="nb-cancel">Cancelar</button><button class="btn" type="submit" id="nb-go">Crear banco</button></div>
+  </form>
+</div>
+
 <!-- Diálogo importar -->
 <div class="layer" id="l-imp" hidden role="dialog" aria-modal="true" aria-labelledby="i-title">
   <div class="box">
@@ -417,7 +437,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);b
     <p class="muted" style="font-size:14px">El Excel debe tener estas columnas en la primera fila: <b>Tema</b>, <b>Pregunta</b>, <b>Correcta</b>, <b>Incorrecta 1</b>, <b>Incorrecta 2</b>, <b>Incorrecta 3</b>. Puedes usar el botón "Descargar banco en Excel" como plantilla.</p>
     <label class="f" for="i-file">Archivo (.xlsx o .csv)<input type="file" id="i-file" accept=".xlsx,.xls,.csv"></label>
     <div id="i-prev" class="stack-s"></div>
-    <label class="check" for="i-off"><input type="checkbox" id="i-off" checked> Desactivar las preguntas que ya están en el banco (recomendado si este Excel reemplaza al anterior)</label>
+    <label class="check" for="i-off"><input type="checkbox" id="i-off" checked> Desactivar las preguntas que ya están en este banco (recomendado si este Excel lo reemplaza). Si quieres un banco aparte, mejor crea un <b>Nuevo banco</b> vacío e importa ahí.</label>
     <p class="err" id="i-err" hidden></p><p class="okmsg" id="i-ok" hidden></p>
     <div class="row" style="justify-content:flex-end"><button class="btn ghost" type="button" id="i-cancel">Cerrar</button><button class="btn" type="button" id="i-go" disabled>Importar</button></div>
   </div>
@@ -521,36 +541,101 @@ async function entrar(){
 
 /* ================= Config ================= */
 let CFG = null, BANCO = null;
+/* Bancos: BANCOS = null si todavía no se corrió 5_bancos_por_evaluacion.sql (el panel funciona como antes) */
+let BANCOS = null, bancoSel = null;
 async function cargarCfg(){
   const r = await api("GET", "config?id=eq.1&select=*");
   CFG = r && r[0];
-
+  await cargarBancos();
 }
+async function cargarBancos(){
+  try{ BANCOS = await api("GET", "bancos?select=id,nombre,creado,preguntas(count)&order=id.asc"); }
+  catch(e){ if(e.message === "SIN_SESION") throw e; BANCOS = null; }
+  if(BANCOS){
+    BANCOS.forEach(b => b.n = (b.preguntas && b.preguntas[0] && b.preguntas[0].count) || 0);
+    if(!BANCOS.some(b => b.id === bancoSel)) bancoSel = CFG.banco_id || (BANCOS[0] && BANCOS[0].id);
+  }
+  pintarBancos();
+}
+const nombreBanco = id => { const b = (BANCOS || []).find(x => x.id === id); return b ? b.nombre : ""; };
+function pintarBancos(){
+  const hay = !!BANCOS;
+  $("bk-banco").hidden = !hay; $("c-banco-l").hidden = !hay;
+  if(!hay) return;
+  const ops = sel => BANCOS.map(b => '<option value="' + b.id + '"' + (b.id === sel ? " selected" : "") + '>' + esc(b.nombre) + ' · ' + b.n + ' preguntas' + (b.id === CFG.banco_id ? " (en uso)" : "") + '</option>').join("");
+  $("sel-banco").innerHTML = ops(bancoSel);
+  $("c-banco").innerHTML = ops(CFG.banco_id);
+  $("bk-banco-est").innerHTML = bancoSel === CFG.banco_id
+    ? '<span class="chip ok">✓ En uso en la evaluación actual</span>'
+    : '<span class="chip gray">No está en uso</span> <button class="lnk" type="button" id="btn-usar-banco">Usar en la evaluación actual</button>';
+  const u = $("btn-usar-banco"); if(u) u.onclick = usarBanco;
+}
+async function usarBanco(){
+  const nb = nombreBanco(bancoSel);
+  if(!await confirmar("¿Usar este banco?", "Los exámenes de la evaluación \"" + CFG.evaluacion + "\" que empiecen desde ahora sacarán sus preguntas de \"" + nb + "\". Los exámenes ya rendidos no cambian.", "Sí, usar este banco")) return;
+  try{ const r = await api("PATCH", "config?id=eq.1", { banco_id: bancoSel }, "return=representation"); CFG = r[0]; await cargarBancos(); pintarBanco(); }
+  catch(e){ await confirmar("No se pudo cambiar el banco", e.message, "Entendido"); }
+}
+$("sel-banco").onchange = async e => { bancoSel = Number(e.target.value); temaSel = "*"; pintarBancos(); await cargarBanco(); };
+$("btn-nuevo-banco").onclick = () => {
+  $("nb-nombre").value = ""; $("nb-err").hidden = true;
+  $("nb-origen").innerHTML = '<option value="">Vacío (agregar o importar preguntas después)</option>' +
+    BANCOS.map(b => '<option value="' + b.id + '"' + (b.id === bancoSel ? " selected" : "") + '>Copiar de: ' + esc(b.nombre) + ' (' + b.n + ' preguntas)</option>').join("");
+  $("l-banco").hidden = false; $("nb-nombre").focus();
+};
+$("nb-cancel").onclick = () => $("l-banco").hidden = true;
+$("f-banco").addEventListener("submit", async e => {
+  e.preventDefault();
+  const nombre = $("nb-nombre").value.trim().replace(/\s+/g, " "), origen = $("nb-origen").value ? Number($("nb-origen").value) : null, err = $("nb-err");
+  if(nombre.length < 2){ err.textContent = "Escribe un nombre para el banco."; err.hidden = false; return; }
+  const b = $("nb-go"); b.disabled = true; b.textContent = "Creando…";
+  try{
+    bancoSel = await rpc("admin_crear_banco", { p_nombre: nombre, p_origen: origen });
+    $("l-banco").hidden = true; temaSel = "*"; await cargarBancos(); await cargarBanco();
+  }catch(x){ err.textContent = /BANCO_REPETIDO/.test(x.message) ? "Ya existe un banco con ese nombre." : "No se pudo crear: " + x.message; err.hidden = false; }
+  finally{ b.disabled = false; b.textContent = "Crear banco"; }
+});
 function totalPorExamen(porTema){
   if(!BANCO) return null;
   const t = {}; BANCO.filter(p => p.activa).forEach(p => t[p.tema] = (t[p.tema] || 0) + 1);
   return Object.values(t).reduce((s, n) => s + Math.min(n, porTema), 0);
 }
 async function pintarCfg(){
-  if(!BANCO) try{ BANCO = await api("GET", "preguntas?select=*&order=tema.asc,id.asc"); }catch(e){}
+  await cargarBancos();
+  await cargarActivasCfg();
   $("c-titulo").value = CFG.titulo; $("c-eval").value = CFG.evaluacion; $("c-tema").value = CFG.por_tema; $("c-min").value = CFG.minutos;
   $("c-sal").value = CFG.max_salidas; $("c-ap").value = CFG.nota_aprobatoria; $("c-abierto").checked = CFG.abierto;
   actualizarTotal();
   $("cfg-err").hidden = true; $("cfg-ok").hidden = true;
   $("exam-link").textContent = location.href.replace(/admin\.html.*$/, "").replace(/[?#].*$/, "");
 }
-function actualizarTotal(){ const n = totalPorExamen(Number($("c-tema").value) || 0); $("c-total").textContent = n === null ? "" : "Con el banco actual, cada técnico recibirá " + n + " preguntas."; }
+/* Preguntas activas del banco elegido en Configuración (para calcular cuántas recibe cada técnico) */
+let ACT_CFG = null;
+async function cargarActivasCfg(){
+  const id = BANCOS ? Number($("c-banco").value) : null;
+  try{ ACT_CFG = await api("GET", "preguntas?select=tema&activa=eq.true" + (id ? "&banco_id=eq." + id : "")); }catch(e){ ACT_CFG = null; }
+  actualizarTotal();
+}
+function actualizarTotal(){
+  const por = Number($("c-tema").value) || 0;
+  if(!ACT_CFG){ $("c-total").textContent = ""; return; }
+  const t = {}; ACT_CFG.forEach(p => t[p.tema] = (t[p.tema] || 0) + 1);
+  const n = Object.values(t).reduce((s, k) => s + Math.min(k, por), 0);
+  $("c-total").textContent = "Con el banco elegido, cada técnico recibirá " + n + " preguntas.";
+}
 $("c-tema").addEventListener("input", actualizarTotal);
+$("c-banco").addEventListener("change", cargarActivasCfg);
 $("f-cfg").addEventListener("submit", async e => {
   e.preventDefault();
   const body = { titulo: $("c-titulo").value.trim(), evaluacion: $("c-eval").value.trim(), por_tema: Number($("c-tema").value), minutos: Number($("c-min").value),
                  max_salidas: Number($("c-sal").value), nota_aprobatoria: Number($("c-ap").value), abierto: $("c-abierto").checked };
+  if(BANCOS) body.banco_id = Number($("c-banco").value);
   const err = $("cfg-err"); err.hidden = true; $("cfg-ok").hidden = true;
   if(!body.titulo || !body.evaluacion){ err.textContent = "El título y el nombre de la evaluación no pueden estar vacíos."; err.hidden = false; return; }
   if([body.por_tema, body.minutos, body.max_salidas].some(n => !Number.isInteger(n) || n < 1) || !Number.isInteger(body.nota_aprobatoria) || body.nota_aprobatoria < 0){ err.textContent = "Revisa los números: deben ser enteros mayores que cero."; err.hidden = false; return; }
   try{
     const r = await api("PATCH", "config?id=eq.1", body, "return=representation");
-    CFG = r[0]; $("cfg-ok").hidden = false; evalSel = null;
+    CFG = r[0]; $("cfg-ok").hidden = false; evalSel = null; await cargarBancos();
   }catch(x){ err.textContent = "No se pudo guardar: " + x.message; err.hidden = false; }
 });
 $("btn-copy").onclick = async () => { try{ await navigator.clipboard.writeText($("exam-link").textContent); $("copy-ok").hidden = false; setTimeout(() => $("copy-ok").hidden = true, 2000); }catch(e){} };
@@ -726,7 +811,8 @@ $("btn-xls").onclick = () => {
 /* ================= Banco de preguntas ================= */
 async function cargarBanco(){
   $("bank").innerHTML = '<p class="muted">Cargando…</p>';
-  try{ BANCO = await api("GET", "preguntas?select=*&order=tema.asc,id.asc"); }
+  if(BANCOS === null && CFG) await cargarBancos();
+  try{ BANCO = await api("GET", "preguntas?select=*" + (BANCOS && bancoSel ? "&banco_id=eq." + bancoSel : "") + "&order=tema.asc,id.asc"); }
   catch(e){ if(e.message !== "SIN_SESION") $("bank").innerHTML = '<p class="err">No se pudo cargar el banco (' + esc(e.message) + ').</p>'; return; }
   pintarBanco();
 }
@@ -758,7 +844,7 @@ function pintarBanco(){
   const nombres = Object.keys(temas);
   if(temaSel !== "*" && !temas[temaSel]) temaSel = "*";
   const act = BANCO.filter(p => p.activa).length;
-  $("bank-sum").textContent = BANCO.length + " preguntas (" + act + " activas) en " + nombres.length + " temas. Cada técnico recibe " + (totalPorExamen(CFG.por_tema) || 0) + " (" + CFG.por_tema + " por tema).";
+  $("bank-sum").textContent = BANCO.length + " preguntas (" + act + " activas) en " + nombres.length + " temas." + (BANCOS && bancoSel !== CFG.banco_id ? " Este banco no está en uso." : " Cada técnico recibe " + (totalPorExamen(CFG.por_tema) || 0) + " (" + CFG.por_tema + " por tema).");
   $("dl-temas").innerHTML = nombres.map(t => '<option value="' + esc(t) + '"></option>').join("");
 
   // Tarjetas de tema: sirven de filtro
@@ -817,8 +903,9 @@ $("f-q").addEventListener("submit", async e => {
   const ops = [body.correcta, body.incorrecta1, body.incorrecta2, body.incorrecta3].map(s => s.toLowerCase());
   if(new Set(ops).size < 4){ err.textContent = "Las cuatro opciones deben ser distintas."; err.hidden = false; return; }
   try{
-    if(editando) await api("PATCH", "preguntas?id=eq." + editando.id, body); else await api("POST", "preguntas", body, "return=minimal");
-    $("l-q").hidden = true; await cargarBanco();
+    if(editando) await api("PATCH", "preguntas?id=eq." + editando.id, body);
+    else await api("POST", "preguntas", BANCOS ? Object.assign(body, { banco_id: bancoSel }) : body, "return=minimal");
+    $("l-q").hidden = true; await cargarBanco(); if(BANCOS){ await cargarBancos(); }
   }catch(x){ err.textContent = "No se pudo guardar: " + x.message; err.hidden = false; }
 });
 
@@ -837,7 +924,7 @@ $("btn-tpl").onclick = async () => {
   const rows = [CAB].concat((BANCO || []).map(p => [p.tema, p.texto, p.correcta, p.incorrecta1, p.incorrecta2, p.incorrecta3, p.activa ? "Sí" : "No"]));
   if(rows.length === 1) rows.push(["Electricidad y controles", "¿Con qué instrumento se mide la corriente sin abrir el circuito?", "Pinza amperimétrica", "Manómetro", "Vacuómetro", "Termómetro", "Sí"]);
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, hojaConFormato(rows, [26,70,45,45,45,45,8]), "Preguntas");
-  XLSX.writeFile(wb, "Banco de preguntas.xlsx");
+  XLSX.writeFile(wb, (BANCOS ? nombreBanco(bancoSel) : "Banco de preguntas").replace(/[\\/:*?"<>|]/g, "-") + ".xlsx");
 };
 
 /* Importar */
@@ -879,11 +966,13 @@ $("i-file").onchange = async e => {
 $("i-go").onclick = async () => {
   const b = $("i-go"); b.disabled = true; b.textContent = "Importando…";
   try{
-    if($("i-off").checked) await api("PATCH", "preguntas?activa=eq.true", { activa: false });
-    for(let i = 0; i < IMP.length; i += 200) await api("POST", "preguntas", IMP.slice(i, i + 200), "return=minimal");
+    const enBanco = BANCOS && bancoSel ? "&banco_id=eq." + bancoSel : "";
+    if($("i-off").checked) await api("PATCH", "preguntas?activa=eq.true" + enBanco, { activa: false });
+    const filas = BANCOS ? IMP.map(p => Object.assign({}, p, { banco_id: bancoSel })) : IMP;
+    for(let i = 0; i < filas.length; i += 200) await api("POST", "preguntas", filas.slice(i, i + 200), "return=minimal");
     $("i-ok").textContent = "Listo: se importaron " + IMP.length + " preguntas."; $("i-ok").hidden = false; IMP = [];
     b.textContent = "Importado";
-    await cargarBanco();
+    await cargarBanco(); if(BANCOS) await cargarBancos();
   }catch(x){ $("i-err").textContent = "No se pudo importar: " + x.message; $("i-err").hidden = false; b.disabled = false; b.textContent = "Reintentar"; }
 };
 
