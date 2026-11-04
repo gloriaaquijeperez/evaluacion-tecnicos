@@ -212,7 +212,7 @@ body{overflow-x:clip}
   <div class="aviso" role="note">
     <div class="aviso-h"><span class="aviso-i" aria-hidden="true">!</span>Antes de empezar</div>
     <ul>
-      <li><span aria-hidden="true">📵</span>No salgas de la página, no cambies de app ni uses dos pantallas</li>
+      <li><span aria-hidden="true">📵</span>No salgas de la página ni cambies de app, y no abras paneles laterales (Copilot, ChatGPT) ni uses dos pantallas</li>
       <li><span aria-hidden="true">🔒</span>No recargues ni bloquees la pantalla</li>
       <li id="al-regla" class="fuerte"><span aria-hidden="true">⛔</span>Si lo haces, el examen se anula</li>
     </ul>
@@ -365,6 +365,7 @@ const ERRORES = {
   ZONA_INVALIDA: "Selecciona tu zona.",
   VENTANA: "Maximiza la ventana del navegador y no uses pantalla dividida antes de comenzar.",
   DOS_PANTALLAS: "Desconecta la segunda pantalla (monitor) antes de comenzar. Solo se permite una pantalla.",
+  PANEL: "Cierra la barra lateral o los paneles del navegador (Copilot, ChatGPT, pantalla dividida) y deja el zoom en 100 % (Ctrl + 0) antes de comenzar.",
   SIN_PREGUNTAS: "El examen todavía no tiene preguntas cargadas. Avisa a el evaluador.",
   RED: "No hay conexión a internet. Revisa tu señal e intenta de nuevo."
 };
@@ -456,6 +457,7 @@ $("f-start").addEventListener("submit", async e => {
   if(!$("in-acepto").checked) return fallo("Marca la casilla para confirmar que leíste las reglas.");
   if(ventanaChica()) return fallo(ERRORES.VENTANA);
   if(dosPantallas()) return fallo(ERRORES.DOS_PANTALLAS);
+  if(panelAbierto()) return fallo(ERRORES.PANEL);
   err.hidden = true;
   DATOS = { nombre, dni, zona };
   $("ru-err").hidden = true;
@@ -464,7 +466,7 @@ $("f-start").addEventListener("submit", async e => {
 $("btn-ru-no").onclick = () => $("l-rules").hidden = true;
 $("btn-ru-yes").onclick = async () => {
   if(!DATOS) return;
-  if(ventanaChica() || dosPantallas()){ $("ru-err").textContent = dosPantallas() ? ERRORES.DOS_PANTALLAS : ERRORES.VENTANA; $("ru-err").hidden = false; return; }
+  if(ventanaChica() || dosPantallas() || panelAbierto()){ $("ru-err").textContent = dosPantallas() ? ERRORES.DOS_PANTALLAS : panelAbierto() ? ERRORES.PANEL : ERRORES.VENTANA; $("ru-err").hidden = false; return; }
   const b = $("btn-ru-yes"), er = $("ru-err"); b.disabled = true; b.textContent = "Preparando tu examen…"; er.hidden = true;
   try{
     const p = await rpc("iniciar_examen", { p_nombre: DATOS.nombre, p_dni: DATOS.dni, p_zona: DATOS.zona });
@@ -496,6 +498,7 @@ function abrirExamen(){
   if(timer) clearInterval(timer); tick(); timer = setInterval(tick, 250);
   pedirPantallaEncendida();
   graciaHasta = Date.now() + 1500;   // margen para el paso a pantalla completa
+  setTimeout(() => { proporcionBase = proporcion(); }, 1200);   // medida de referencia ya en pantalla completa
 }
 async function pedirPantallaEncendida(){
   try{ if("wakeLock" in navigator){ wakeLock = await navigator.wakeLock.request("screen"); } }catch(e){}
@@ -647,11 +650,22 @@ function ventanaChica(){
   return (outerWidth || innerWidth) < W * 0.85 || (outerHeight || innerHeight) < H * 0.8;
 }
 const dosPantallas = () => screen.isExtended === true;   // Chrome/Edge: hay más de un monitor conectado
+/* Panel dentro del navegador (barra lateral de Edge con Copilot/ChatGPT, pantalla dividida de Edge,
+   panel lateral de Chrome, herramientas de desarrollador): la ventana sigue grande, pero la página se achica.
+   Se compara el ancho de la página con el de la ventana; durante el examen, contra lo medido al empezar. */
+let proporcionBase = null;
+function proporcion(){ return { w: innerWidth / (outerWidth || innerWidth), h: innerHeight / (outerHeight || innerHeight) }; }
+function panelAbierto(){
+  if(matchMedia("(pointer:coarse)").matches) return false;
+  const p = proporcion();
+  if(proporcionBase) return p.w < proporcionBase.w * 0.9 || p.h < proporcionBase.h * 0.85;
+  return p.w < 0.85;
+}
 let fuera = false, tapado = false, graciaHasta = 0;
 const enExamen = () => E && !E.enviando && !$("v-exam").hidden;
 function tapar(anula){
   $("f-title").textContent = anula ? "Saliste del examen" : "Examen en pausa";
-  $("f-text").innerHTML = anula ? "Se detectó que cambiaste de app, dividiste la pantalla o usas otra pantalla. <b>Quedó registrado en el sistema.</b>"
+  $("f-text").innerHTML = anula ? "Se detectó que cambiaste de app, abriste un panel del navegador, dividiste la pantalla o usas otra pantalla. <b>Quedó registrado en el sistema.</b>"
                                 : "Las preguntas se ocultan mientras no estés en esta ventana.";
   $("f-sub").textContent = anula ? "Vuelve a esta ventana y maximízala." : "Haz clic o toca aquí para continuar.";
   $("l-fuera").hidden = false;
@@ -664,7 +678,7 @@ function salir(){
 }
 function revisarFoco(){
   if(!enExamen() || Date.now() < graciaHasta) return;
-  if(document.hidden || ventanaChica() || dosPantallas()) return salir();
+  if(document.hidden || ventanaChica() || dosPantallas() || panelAbierto()) return salir();
   if(fuera) return volver();
   if(!document.hasFocus()){ if(!tapado){ tapado = true; tapar(false); } }
   else if(tapado){ tapado = false; $("l-fuera").hidden = true; }
