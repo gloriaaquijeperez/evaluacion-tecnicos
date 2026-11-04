@@ -338,6 +338,7 @@ body{overflow-x:clip}
     <h2 id="f-title" style="font-size:24px">Saliste del examen</h2>
     <p id="f-text"></p>
     <p class="muted" style="font-size:14px" id="f-sub"></p>
+    <button class="btn full" type="button" id="btn-fs" hidden>Volver a pantalla completa</button>
   </div>
 </div>
 <div class="layer" id="l-other" hidden role="dialog" aria-modal="true" aria-labelledby="o-title">
@@ -665,13 +666,21 @@ function panelAbierto(){
 }
 let fuera = false, tapado = false, graciaHasta = 0;
 const enExamen = () => E && !E.enviando && !$("v-exam").hidden;
-function tapar(anula){
+function tapar(anula, pideFS){
   $("f-title").textContent = anula ? "Saliste del examen" : "Examen en pausa";
   $("f-text").innerHTML = anula ? "Se detectó que cambiaste de app, abriste un panel del navegador, dividiste la pantalla o usas otra pantalla. <b>Quedó registrado en el sistema.</b>"
-                                : "Las preguntas se ocultan mientras no estés en esta ventana.";
+                        : pideFS ? "Saliste de la pantalla completa. Las preguntas se ocultan hasta que vuelvas."
+                        : "Las preguntas se ocultan mientras no estés en esta ventana.";
   $("f-sub").textContent = anula ? "Vuelve a esta ventana y maximízala." : "Haz clic o toca aquí para continuar.";
+  $("btn-fs").hidden = anula || !pideFS;
   $("l-fuera").hidden = false;
 }
+/* Pantalla completa: si el examen logró entrar en pantalla completa (no aplica en iPhone, que no la permite),
+   salir de ella (tecla Esc, gesto atrás) pausa el examen; hay que volver con el botón antes de 5 s o se anula. */
+let fsActivo = false;
+const sinPantallaCompleta = () => fsActivo && !document.fullscreenElement;
+document.addEventListener("fullscreenchange", () => { if(document.fullscreenElement) fsActivo = true; revisarFoco(); });
+$("btn-fs").onclick = () => { try{ document.documentElement.requestFullscreen().catch(()=>{}); }catch(x){} };
 function salir(){
   if(!enExamen() || fuera) return;
   fuera = true; ocultoDesde = Date.now();
@@ -684,11 +693,13 @@ function revisarFoco(){
   if(!enExamen() || Date.now() < graciaHasta) return;
   if(document.hidden || ventanaChica() || dosPantallas() || panelAbierto()) return salir();
   if(fuera) return volver();
-  if(!document.hasFocus()){
-    if(!tapado){ tapado = true; tapadoDesde = Date.now(); tapar(false); }
+  const pideFS = sinPantallaCompleta();
+  if(!document.hasFocus() || pideFS){
+    if(!tapado){ tapado = true; tapadoDesde = Date.now(); }
+    tapar(false, pideFS);
     const quedan = PAUSA_MAX - Math.floor((Date.now() - tapadoDesde) / 1000);
     if(quedan <= 0){ tapado = false; return salir(); }
-    $("f-sub").innerHTML = "Haz clic aquí para continuar. <b>Si no vuelves en " + quedan + " s, el examen se anulará.</b>";
+    $("f-sub").innerHTML = (pideFS ? "Pulsa el botón para volver." : "Haz clic aquí para continuar.") + " <b>Si no vuelves en " + quedan + " s, el examen se anulará.</b>";
   }
   else if(tapado){ tapado = false; $("l-fuera").hidden = true; }
 }
