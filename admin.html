@@ -174,6 +174,17 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);b
 /* Selector de banco */
 .bk-banco{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 16px;padding:16px 18px;border-left:5px solid var(--low)}
 .bk-banco-est{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:10px}
+/* Ventana de importar */
+.i-destino{background:var(--low-soft);border-radius:10px;padding:10px 12px;font-size:14px}
+.i-modo{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.i-modo legend{font-weight:600;font-size:14px;margin-bottom:6px}
+.i-op{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer}
+.i-op:has(input:checked){border-color:var(--low);background:var(--low-soft)}
+.i-op input{margin:3px 0 0;accent-color:var(--low);flex:none}
+.i-op b{display:block;font-size:14px}
+.i-op small{display:block;color:var(--muted);font-size:13px;line-height:1.4}
+.i-archivo input[type=file]{border:2px dashed var(--line);border-radius:12px;padding:14px;background:#F5F8FC;cursor:pointer;width:100%}
+.i-archivo input[type=file]::file-selector-button{border:0;border-radius:10px;padding:9px 14px;margin-right:12px;background:var(--grad-btn);color:#fff;font-weight:700;cursor:pointer}
 /* ===== Celular y tablet ===== */
 @media (max-width:900px){
   .top .in{padding-top:10px;padding-bottom:10px;gap:8px}
@@ -435,9 +446,15 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);b
   <div class="box">
     <h2 style="font-size:22px" id="i-title">Importar preguntas desde Excel</h2>
     <p class="muted" style="font-size:14px">El Excel debe tener estas columnas en la primera fila: <b>Tema</b>, <b>Pregunta</b>, <b>Correcta</b>, <b>Incorrecta 1</b>, <b>Incorrecta 2</b>, <b>Incorrecta 3</b>. Puedes usar el botón "Descargar banco en Excel" como plantilla.</p>
-    <label class="f" for="i-file">Archivo (.xlsx o .csv)<input type="file" id="i-file" accept=".xlsx,.xls,.csv"></label>
+    <label class="f i-archivo" for="i-file"><span>1. Elige el archivo Excel (.xlsx o .csv)</span><input type="file" id="i-file" accept=".xlsx,.xls,.csv"></label>
     <div id="i-prev" class="stack-s"></div>
-    <label class="check" for="i-off"><input type="checkbox" id="i-off" checked> Desactivar las preguntas que ya están en este banco (recomendado si este Excel lo reemplaza). Si quieres un banco aparte, mejor crea un <b>Nuevo banco</b> vacío e importa ahí.</label>
+    <p class="i-destino" id="i-banco" hidden></p>
+    <fieldset class="i-modo">
+      <legend>2. ¿Qué hago con las preguntas que ya tiene este banco?</legend>
+      <label class="i-op" for="i-add"><input type="radio" name="i-modo" id="i-add"><span><b>Agregar</b><small>Las preguntas del Excel se suman a las que ya hay.</small></span></label>
+      <label class="i-op" for="i-off"><input type="radio" name="i-modo" id="i-off" checked><span><b>Reemplazar</b><small>Las preguntas actuales dejan de salir en el examen (no se borran, quedan desactivadas) y se usan solo las del Excel.</small></span></label>
+    </fieldset>
+    <p class="muted" style="font-size:13px" id="i-tip" hidden>¿Quieres un banco aparte, sin tocar este? <button class="lnk" type="button" id="i-nuevo">Crear un nuevo banco</button> y luego importa ahí.</p>
     <p class="err" id="i-err" hidden></p><p class="okmsg" id="i-ok" hidden></p>
     <div class="row" style="justify-content:flex-end"><button class="btn ghost" type="button" id="i-cancel">Cerrar</button><button class="btn" type="button" id="i-go" disabled>Importar</button></div>
   </div>
@@ -930,7 +947,13 @@ $("btn-tpl").onclick = async () => {
 /* Importar */
 let IMP = [];
 const norm = s => String(s == null ? "" : s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
-$("btn-imp").onclick = () => { IMP = []; $("i-file").value = ""; $("i-prev").innerHTML = ""; $("i-err").hidden = true; $("i-ok").hidden = true; $("i-go").disabled = true; $("l-imp").hidden = false; };
+$("btn-imp").onclick = () => {
+  IMP = []; $("i-file").value = ""; $("i-prev").innerHTML = ""; $("i-err").hidden = true; $("i-ok").hidden = true; $("i-go").disabled = true;
+  $("i-banco").hidden = !BANCOS; $("i-tip").hidden = !BANCOS;
+  if(BANCOS) $("i-banco").innerHTML = "Se importará en el banco: <b>" + esc(nombreBanco(bancoSel)) + "</b>";
+  $("i-off").checked = true; $("l-imp").hidden = false;
+};
+$("i-nuevo").onclick = () => { $("l-imp").hidden = true; $("btn-nuevo-banco").click(); };
 $("i-cancel").onclick = () => $("l-imp").hidden = true;
 $("i-file").onchange = async e => {
   const f = e.target.files[0]; IMP = []; $("i-go").disabled = true; $("i-err").hidden = true; $("i-ok").hidden = true; $("i-prev").innerHTML = "";
