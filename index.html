@@ -221,7 +221,7 @@ body{overflow-x:clip}
     <ul>
       <li><span aria-hidden="true">📵</span>No salgas de la página ni cambies de app, y no abras paneles laterales (Copilot, ChatGPT) ni uses dos pantallas</li>
       <li><span aria-hidden="true">🔒</span>No recargues, no bloquees la pantalla ni tomes capturas</li>
-      <li><span aria-hidden="true">⛶</span>No salgas de la pantalla completa (tecla Esc): si sales, tienes 5 segundos para volver</li>
+      <li><span aria-hidden="true">⛶</span>No salgas de la pantalla completa (tecla Esc): si sales, tienes 10 segundos para volver</li>
       <li id="al-regla" class="fuerte"><span aria-hidden="true">⛔</span>Si lo haces, el examen se anula</li>
     </ul>
   </div>
@@ -332,7 +332,7 @@ body{overflow-x:clip}
 <div class="layer" id="l-rules" hidden role="alertdialog" aria-modal="true" aria-labelledby="ru-title">
   <div class="box alert">
     <h2 id="ru-title" style="font-size:24px">Último aviso</h2>
-    <p id="ru-text">Desde que presiones <b>Comenzar</b>, si cambias de pestaña, sales de esta página, abres otra aplicación, recargas o bloqueas la pantalla, <b>el examen se cerrará y quedará ANULADO</b>. El examen se abrirá en <b>pantalla completa</b>: si sales de ella (tecla Esc), tendrás <b>5 segundos</b> para volver o también se anulará. No hay segundo intento.</p>
+    <p id="ru-text">Desde que presiones <b>Comenzar</b>, si cambias de pestaña, sales de esta página, abres otra aplicación, recargas o bloqueas la pantalla, <b>el examen se cerrará y quedará ANULADO</b>. El examen se abrirá en <b>pantalla completa</b>: si sales de ella (tecla Esc), tendrás <b>10 segundos</b> para volver o también se anulará. No hay segundo intento.</p>
     <p class="muted" style="font-size:14px" id="ru-time"></p>
     <p class="err" id="ru-err" role="alert" hidden></p>
     <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" style="flex:1" type="button" id="btn-ru-no">Todavía no</button><button class="btn danger" style="flex:1" type="button" id="btn-ru-yes">Entiendo, comenzar</button></div>
@@ -686,7 +686,7 @@ function tapar(anula, pideFS){
   $("l-fuera").hidden = false;
 }
 /* Pantalla completa: si el examen logró entrar en pantalla completa (no aplica en iPhone, que no la permite),
-   salir de ella (tecla Esc, gesto atrás) pausa el examen; hay que volver con el botón antes de 5 s o se anula. */
+   salir de ella (tecla Esc, gesto atrás) pausa el examen; hay que volver con el botón antes de 10 s o se anula. */
 let fsActivo = false;
 const sinPantallaCompleta = () => fsActivo && !document.fullscreenElement;
 document.addEventListener("fullscreenchange", () => { if(document.fullscreenElement) fsActivo = true; revisarFoco(); });
@@ -697,7 +697,7 @@ function salir(){
   tapar(true);
   salidaPendiente = rpc("registrar_salida", { p_id: E.id, p_token: E.token, p_tipo: "salida" }, { keepalive: true }).catch(() => null);
 }
-const PAUSA_MAX = 5;   // segundos fuera de foco permitidos (clic en la barra de tareas, etc.); más tiempo anula
+const PAUSA_MAX = 10;  // segundos fuera de foco permitidos (clic en la barra de tareas, etc.); más tiempo anula
 let tapadoDesde = 0;
 function revisarFoco(){
   if(!enExamen() || Date.now() < graciaHasta) return;
@@ -711,7 +711,7 @@ function revisarFoco(){
     if(quedan <= 0){ tapado = false; return salir(); }
     $("f-sub").textContent = pideFS ? "Pulsa el botón para volver a pantalla completa." : "Haz clic o toca aquí para continuar.";
     $("f-num").textContent = quedan; $("f-cuenta").hidden = false;
-    $("f-cuenta").classList.toggle("urge", quedan <= 2);
+    $("f-cuenta").classList.toggle("urge", quedan <= 3);
   }
   else if(tapado){ tapado = false; $("l-fuera").hidden = true; }
 }
