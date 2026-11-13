@@ -647,7 +647,7 @@ async function pintarCfg(){
   $("c-sal").value = CFG.max_salidas; $("c-ap").value = CFG.nota_aprobatoria; $("c-abierto").checked = CFG.abierto;
   actualizarTotal();
   $("cfg-err").hidden = true; $("cfg-ok").hidden = true;
-  $("exam-link").textContent = location.href.replace(/admin\.html.*$/, "").replace(/[?#].*$/, "");
+  $("exam-link").textContent = location.href.replace(/[?#].*$/, "").replace(/admin(\.html)?\/?$/i, "");   // Cloudflare sirve el panel como /admin
 }
 /* Preguntas activas del banco elegido en Configuración (para calcular cuántas recibe cada técnico) */
 let ACT_CFG = null;
