@@ -57,6 +57,7 @@ input[type=text],input[type=tel]{color:var(--ink);background:var(--bg);border:1p
 .alerta b.t{color:var(--high-ink);font-family:var(--f-display);font-size:20px;letter-spacing:.01em}
 .alerta ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:15px}
 .center{min-height:70vh;display:flex;flex-direction:column;justify-content:center;gap:12px}
+#msg-text .falta{font-family:var(--f-mono,monospace);font-size:28px;color:var(--ink,#10285F);letter-spacing:.04em;display:inline-block;margin:6px 0}
 
 /* examen */
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
@@ -421,7 +422,31 @@ let E = null, MAXS = 1, DATOS = null;          // examen en curso: {id, token, n
 let timer = null, ocultoDesde = null, salidaPendiente = null, pendientes = 0, wakeLock = null;
 
 /* ---------- arranque ---------- */
+/* Examen cerrado: si está programado, muestra cuándo se abre y se abre solo a esa hora (según la hora del servidor) */
+let esperaTimer = null;
+function examenCerrado(c){
+  const off = c && c.ahora ? Date.parse(c.ahora) - Date.now() : 0, ahora = () => Date.now() + off;
+  const abre = c && c.abre_en ? Date.parse(c.abre_en) : null, cierra = c && c.cierra_en ? Date.parse(c.cierra_en) : null;
+  const fecha = ms => new Date(ms).toLocaleString("es-PE", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit" });
+  const dos = n => String(n).padStart(2, "0");
+  if(c && c.manual && abre && ahora() < abre && (!cierra || cierra > abre)){
+    mensaje("El examen aún no empieza", "", false);
+    const nom = document.createElement("b"); nom.textContent = c.evaluacion || "";
+    const tick = () => {
+      const s = Math.ceil((abre - ahora()) / 1000);
+      if(s <= -2){ clearInterval(esperaTimer); esperaTimer = null; arrancar(); return; }   // 2 s de margen para que el servidor ya lo tenga abierto
+      const q = Math.max(0, s), d = Math.floor(q / 86400), h = Math.floor(q % 86400 / 3600), m = Math.floor(q % 3600 / 60);
+      const falta = (d ? d + (d === 1 ? " día, " : " días, ") : "") + dos(h) + ":" + dos(m) + ":" + dos(q % 60);
+      $("msg-text").innerHTML = (nom.textContent ? nom.outerHTML + "<br>" : "") + "Se abrirá el <b>" + fecha(abre) + "</b><br>Faltan <b class=\"falta\">" + falta +
+        "</b><br>Deja esta página abierta: el examen aparecerá solo a esa hora.";
+    };
+    tick(); esperaTimer = setInterval(tick, 1000); return;
+  }
+  if(c && c.manual && cierra && ahora() >= cierra){ mensaje("El examen ya cerró", "El examen cerró el " + fecha(cierra) + " · Consulta con el evaluador.", false); return; }
+  mensaje("Examen no disponible", ERRORES.EXAMEN_CERRADO, true);
+}
 async function arrancar(){
+  if(esperaTimer){ clearInterval(esperaTimer); esperaTimer = null; }
   if(!URL_BASE || URL_BASE.includes("TU-PROYECTO") || !KEY || KEY.includes("PEGA-AQUI")){
     mensaje("Falta configurar la conexión", "Edita el archivo config.js con la dirección y la clave de tu proyecto de Supabase.", false); return;
   }
@@ -440,7 +465,7 @@ async function arrancar(){
       return;
     }
     const c = await conReintentos(() => rpc("config_publica", {}), 3);
-    if(!c || !c.abierto){ mensaje("Examen no disponible", ERRORES.EXAMEN_CERRADO, true); return; }
+    if(!c || !c.abierto){ examenCerrado(c); return; }
     $("st-eval").textContent = c.evaluacion + " · Técnicos";
     $("r-n").textContent = c.total; $("r-min").textContent = c.minutos + " min";
     const permitidas = Math.max(0, c.max_salidas - 1);
